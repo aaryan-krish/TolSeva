@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "TolSeva",
+    "slug": "tolseva",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#003087"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.gov.tolseva"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#003087"
+      },
+      "package": "in.gov.tolseva",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      ["expo-camera", { "cameraPermission": "TolSeva needs camera access to photograph instruments." }],
+      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "TolSeva needs location for GPS-tagged visits." }],
+      ["expo-image-picker", { "photosPermission": "TolSeva needs photo access for instrument documentation." }]
+    ]
+  }
+}
