@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#003087"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "in.gov.tolseva"
@@ -23,20 +25,44 @@
       },
       "package": "in.gov.tolseva",
       "permissions": [
-        "CAMERA",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      ["expo-camera", { "cameraPermission": "TolSeva needs camera access to photograph instruments." }],
-      ["expo-location", { "locationAlwaysAndWhenInUsePermission": "TolSeva needs location for GPS-tagged visits." }],
-      ["expo-image-picker", { "photosPermission": "TolSeva needs photo access for instrument documentation." }]
-    ]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "TolSeva needs camera access to photograph instruments."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "TolSeva needs location for GPS-tagged visits."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TolSeva needs photo access for instrument documentation."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "337729e5-f7f2-4b89-84e8-2038c5e7ecbe"
+      }
+    }
   }
 }
