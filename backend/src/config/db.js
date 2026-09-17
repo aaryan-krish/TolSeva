@@ -21,6 +21,7 @@ const poolConfig = process.env.DATABASE_URL
     };
 
 const pool = new Pool(poolConfig);
+let isPgAvailable = false;
 
 pool.on('error', (err) => {
   console.error('Unexpected PostgreSQL client error', err);
@@ -37,7 +38,6 @@ async function testConnection() {
   }
 }
 
-<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────────────────────
 // IN-MEMORY FALLBACK DATABASE (Active when PostgreSQL is offline)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -568,16 +568,3 @@ async function query(text, params = []) {
 }
 
 module.exports = { pool, query, testConnection, isPgAvailable: () => isPgAvailable };
-=======
-async function query(text, params) {
-  const start = Date.now();
-  const res = await pool.query(text, params);
-  const duration = Date.now() - start;
-  if (process.env.NODE_ENV === 'development') {
-    console.log('SQL:', { text: text.slice(0, 80), duration: `${duration}ms`, rows: res.rowCount });
-  }
-  return res;
-}
-
-module.exports = { pool, query, testConnection };
->>>>>>> parent of 64b43ec (remove db.js credentials)
