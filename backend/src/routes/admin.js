@@ -103,6 +103,23 @@ router.patch('/appointments/:id/assign', adminAuth, async (req, res, next) => {
   }
 });
 
+// ── PATCH /api/admin/appointments/:id/confirm ────────────────────────────────
+router.patch('/appointments/:id/confirm', adminAuth, async (req, res, next) => {
+  try {
+    const result = await query(
+      `UPDATE appointments
+       SET status = 'CONFIRMED', updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [req.params.id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Appointment not found' });
+    res.json({ appointment: result.rows[0] });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── GET /api/admin/appointments ──────────────────────────────────────────────
 router.get('/appointments', adminAuth, async (req, res, next) => {
   try {

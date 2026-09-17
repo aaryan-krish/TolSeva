@@ -119,6 +119,7 @@ CREATE INDEX IF NOT EXISTS idx_verification_inspector ON verification_logs(inspe
 INSERT INTO admins (username, password_hash, full_name)
 VALUES (
   'admin',
-  '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  '$2a$10$ZQuVDPiEwciGG7F2Kc/qMuGkOeiXBPirNxpQSNg2o32i6jjW4nmDS',
   'System Administrator'
-) ON CONFLICT (username) DO NOTHING;
+) ON CONFLICT (username) DO UPDATE
+  SET password_hash = '$2a$10$ZQuVDPiEwciGG7F2Kc/qMuGkOeiXBPirNxpQSNg2o32i6jjW4nmDS';
