@@ -30,10 +30,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -57,12 +54,14 @@
         {
           "photosPermission": "TolSeva needs photo access for instrument documentation."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
         "projectId": "337729e5-f7f2-4b89-84e8-2038c5e7ecbe"
       }
-    }
+    },
+    "owner": "tolseva"
   }
 }
