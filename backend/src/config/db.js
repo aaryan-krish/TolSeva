@@ -15,23 +15,29 @@ const poolConfig = process.env.DATABASE_URL
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || 'password',
       ssl: useSSL ? { rejectUnauthorized: false } : false,
-      max: 10,
+      max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 3000,
+      connectionTimeoutMillis: 10000,
     };
 
-let pool = null;
-let isPgAvailable = false;
+const pool = new Pool(poolConfig);
 
-try {
-  pool = new Pool(poolConfig);
-  pool.on('error', (err) => {
-    console.warn('⚠️ [PostgreSQL Pool Warning]:', err.message);
-  });
-} catch (e) {
-  console.warn('⚠️ Could not initialize pg pool:', e.message);
+pool.on('error', (err) => {
+  console.error('Unexpected PostgreSQL client error', err);
+  process.exit(-1);
+});
+
+async function testConnection() {
+  const client = await pool.connect();
+  try {
+    const res = await client.query('SELECT NOW()');
+    console.log('✅ PostgreSQL connected at:', res.rows[0].now);
+  } finally {
+    client.release();
+  }
 }
 
+<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────────────────────
 // IN-MEMORY FALLBACK DATABASE (Active when PostgreSQL is offline)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -562,3 +568,16 @@ async function query(text, params = []) {
 }
 
 module.exports = { pool, query, testConnection, isPgAvailable: () => isPgAvailable };
+=======
+async function query(text, params) {
+  const start = Date.now();
+  const res = await pool.query(text, params);
+  const duration = Date.now() - start;
+  if (process.env.NODE_ENV === 'development') {
+    console.log('SQL:', { text: text.slice(0, 80), duration: `${duration}ms`, rows: res.rowCount });
+  }
+  return res;
+}
+
+module.exports = { pool, query, testConnection };
+>>>>>>> parent of 64b43ec (remove db.js credentials)

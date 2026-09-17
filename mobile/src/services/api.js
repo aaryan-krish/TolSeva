@@ -25,7 +25,6 @@ export const inspectorLogin = (data) => api.post('/auth/inspector/login', data);
 // Vendor
 export const getMachines = () => api.get('/vendor/machines');
 export const addMachine = (data) => api.post('/vendor/machines', data);
-export const getAppointments = () => api.get('/vendor/appointments');
 export const bookAppointment = (data) => api.post('/vendor/appointments', data);
 
 // Inspector

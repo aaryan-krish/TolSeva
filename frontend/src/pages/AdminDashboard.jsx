@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Crown, LogOut, Users, ShieldCheck, Calendar, BarChart3, Check } from 'lucide-react'
+import { Crown, LogOut, Users, ShieldCheck, Calendar, BarChart3 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getAdminDashboard, getAdminVendors, getAdminInspectors, getAdminAppointments, assignInspector, confirmAppointment } from '../services/api.js'
+import { getAdminDashboard, getAdminVendors, getAdminInspectors, getAdminAppointments, assignInspector } from '../services/api.js'
 
 export default function AdminDashboard() {
   const { auth, logout } = useAuth()
@@ -11,8 +11,6 @@ export default function AdminDashboard() {
   const [vendors, setVendors] = useState([])
   const [inspectors, setInspectors] = useState([])
   const [appointments, setAppointments] = useState([])
-  const [selectedInspectors, setSelectedInspectors] = useState({})
-  const [successMsg, setSuccessMsg] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(true)
   const [assigningId, setAssigningId] = useState(null)
@@ -42,20 +40,6 @@ export default function AdminDashboard() {
       await assignInspector(appointmentId, inspectorId)
       const appRes = await getAdminAppointments()
       setAppointments(appRes.data.appointments)
-      setSuccessMsg('Inspector assigned & appointment confirmed!')
-      setTimeout(() => setSuccessMsg(''), 4000)
-    } catch (e) { console.error(e) }
-    finally { setAssigningId(null) }
-  }
-
-  async function handleConfirm(appointmentId) {
-    setAssigningId(appointmentId)
-    try {
-      await confirmAppointment(appointmentId)
-      const appRes = await getAdminAppointments()
-      setAppointments(appRes.data.appointments)
-      setSuccessMsg('Appointment confirmed successfully!')
-      setTimeout(() => setSuccessMsg(''), 4000)
     } catch (e) { console.error(e) }
     finally { setAssigningId(null) }
   }
@@ -167,101 +151,34 @@ export default function AdminDashboard() {
 
             {activeTab === 'appointments' && (
               <div className='card overflow-x-auto'>
-                <div className='flex items-center justify-between mb-4'>
-                  <h2 className='font-bold text-lg'>All Appointments ({appointments.length})</h2>
-                </div>
-                {successMsg && (
-                  <div className='mb-4 bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-2.5 rounded-lg flex items-center gap-2 animate-fadeIn'>
-                    <Check size={16} className='text-green-600' />
-                    <span className='font-semibold'>{successMsg}</span>
-                  </div>
-                )}
+                <h2 className='font-bold text-lg mb-4'>All Appointments ({appointments.length})</h2>
                 <table className='w-full text-sm'>
                   <thead><tr className='bg-gray-50 border-b'>
-                    {['Business', 'Instrument', 'Date', 'Purpose', 'Status', 'Inspector', 'Action'].map(h => (
+                    {['Business', 'Instrument', 'Date', 'Purpose', 'Status', 'Inspector', 'Assign'].map(h => (
                       <th key={h} className='px-4 py-3 text-left font-semibold text-gray-700'>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody className='divide-y'>
-                    {appointments.map(a => {
-                      const selectedId = selectedInspectors[a.id] ?? (a.inspector_id || '');
-                      const isPending = a.status === 'PENDING';
-                      const isConfirmed = a.status === 'CONFIRMED';
-                      const isAssigning = assigningId === a.id;
-
-                      return (
-                        <tr key={a.id} className='hover:bg-gray-50'>
-                          <td className='px-4 py-3 font-medium'>{a.business_name}</td>
-                          <td className='px-4 py-3 text-xs'>{a.make} {a.model}</td>
-                          <td className='px-4 py-3'>{new Date(a.preferred_date).toLocaleDateString('en-IN')}</td>
-                          <td className='px-4 py-3'>{a.purpose?.replace('_', ' ')}</td>
-                          <td className='px-4 py-3'>
-                            <span className={'text-xs font-bold px-2 py-0.5 rounded-full ' + (a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : isConfirmed ? 'bg-blue-100 text-blue-700' : a.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')}>{a.status}</span>
-                          </td>
-                          <td className='px-4 py-3 font-medium text-gray-800'>{a.inspector_name || '—'}</td>
-                          <td className='px-4 py-3'>
-                            {isPending ? (
-                              <div className='flex items-center gap-2'>
-                                <select
-                                  value={selectedId}
-                                  onChange={e => setSelectedInspectors(s => ({ ...s, [a.id]: e.target.value }))}
-                                  className='text-xs border border-gray-300 rounded px-2.5 py-1.5 bg-white text-gray-800 font-medium focus:ring-1 focus:ring-navy-900 focus:border-navy-900'
-                                  disabled={isAssigning}
-                                >
-                                  <option value=''>Choose Inspector...</option>
-                                  {inspectors.map(i => (
-                                    <option key={i.id} value={i.id}>{i.full_name} ({i.zone})</option>
-                                  ))}
-                                </select>
-
-                                {/* Confirmation Button */}
-                                <button
-                                  onClick={() => {
-                                    if (selectedId) {
-                                      handleAssign(a.id, selectedId);
-                                    } else {
-                                      handleConfirm(a.id);
-                                    }
-                                  }}
-                                  disabled={isAssigning || (!selectedId && !a.inspector_id)}
-                                  className={`text-xs px-3 py-1.5 rounded font-bold transition-all flex items-center gap-1 shadow-sm ${
-                                    (!selectedId && !a.inspector_id)
-                                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                      : 'bg-green-600 hover:bg-green-700 text-white active:scale-95'
-                                  }`}
-                                >
-                                  {isAssigning ? (
-                                    <span className='animate-pulse'>Saving...</span>
-                                  ) : (
-                                    <>
-                                      <Check size={13} />
-                                      {a.inspector_id && !selectedInspectors[a.id] ? 'Confirm Visit' : 'Confirm & Assign'}
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            ) : isConfirmed ? (
-                              <div className='flex items-center gap-2'>
-                                <span className='text-xs text-green-700 font-semibold bg-green-50 px-2.5 py-1 rounded border border-green-200 flex items-center gap-1'>
-                                  <Check size={12} /> Confirmed
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    setSelectedInspectors(s => ({ ...s, [a.id]: a.inspector_id || '' }));
-                                    handleAssign(a.id, a.inspector_id);
-                                  }}
-                                  className='text-xs text-blue-600 hover:underline'
-                                >
-                                  Reassign
-                                </button>
-                              </div>
-                            ) : (
-                              <span className='text-xs text-gray-400'>—</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {appointments.map(a => (
+                      <tr key={a.id} className='hover:bg-gray-50'>
+                        <td className='px-4 py-3'>{a.business_name}</td>
+                        <td className='px-4 py-3 text-xs'>{a.make} {a.model}</td>
+                        <td className='px-4 py-3'>{new Date(a.preferred_date).toLocaleDateString('en-IN')}</td>
+                        <td className='px-4 py-3'>{a.purpose?.replace('_', ' ')}</td>
+                        <td className='px-4 py-3'>
+                          <span className={'text-xs font-bold px-2 py-0.5 rounded-full ' + (a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : a.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700' : a.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700')}>{a.status}</span>
+                        </td>
+                        <td className='px-4 py-3'>{a.inspector_name || '-'}</td>
+                        <td className='px-4 py-3'>
+                          {a.status === 'PENDING' && (
+                            <select onChange={e => { if (e.target.value) handleAssign(a.id, e.target.value) }} className='text-xs border border-gray-300 rounded px-2 py-1' disabled={assigningId === a.id} defaultValue=''>
+                              <option value=''>Assign...</option>
+                              {inspectors.map(i => <option key={i.id} value={i.id}>{i.full_name} ({i.zone})</option>)}
+                            </select>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

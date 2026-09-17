@@ -49,7 +49,6 @@ export const getAdminDashboard = () => api.get('/admin/dashboard')
 export const getAdminVendors = (page = 1) => api.get('/admin/vendors', { params: { page } })
 export const getAdminInspectors = () => api.get('/admin/inspectors')
 export const assignInspector = (appointmentId, inspectorId) => api.patch(`/admin/appointments/${appointmentId}/assign`, { inspector_id: inspectorId })
-export const confirmAppointment = (appointmentId) => api.patch(`/admin/appointments/${appointmentId}/confirm`)
 export const getAdminAppointments = () => api.get('/admin/appointments')
 export const createInspector = (data) => api.post('/admin/inspectors', data)
 

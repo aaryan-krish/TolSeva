@@ -1,11 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   async function loadAuth() {
     try {
@@ -17,14 +17,8 @@ export function AuthProvider({ children }) {
       }
     } catch (e) {
       console.error('Auth load error:', e);
-    } finally {
-      setLoading(false);
     }
   }
-
-  useEffect(() => {
-    loadAuth();
-  }, []);
 
   const login = useCallback(async (token, user, role) => {
     await SecureStore.setItemAsync('tolseva_token', token);

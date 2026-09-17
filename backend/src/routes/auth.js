@@ -31,8 +31,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
 
     res.json({
       message: 'OTP sent successfully',
-      // Always provide dev_otp for demo vendors or in non-production
-      dev_otp: otp
+      // Return OTP in dev mode only
+      ...(process.env.NODE_ENV === 'development' && { dev_otp: otp })
     });
   } catch (err) {
     next(err);
@@ -50,14 +50,8 @@ router.post('/vendor/verify-otp', async (req, res, next) => {
     );
     const vendor = result.rows[0];
     if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
-
-    // Allow generated OTP or universal testing OTP (123456)
-    const isMasterOtp = otp === '123456';
-    if (vendor.otp !== otp && !isMasterOtp) {
-      return res.status(401).json({ error: 'Invalid OTP' });
-    }
-
-    if (!isMasterOtp && new Date() > new Date(vendor.otp_expires_at)) {
+    if (vendor.otp !== otp) return res.status(401).json({ error: 'Invalid OTP' });
+    if (new Date() > new Date(vendor.otp_expires_at)) {
       return res.status(401).json({ error: 'OTP expired. Please request a new one.' });
     }
 
