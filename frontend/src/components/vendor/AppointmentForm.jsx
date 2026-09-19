@@ -21,7 +21,7 @@ export default function AppointmentForm({ machines, onClose, onSuccess }) {
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
       <div className='bg-white w-full max-w-md rounded-xl shadow-2xl'>
-        <div className='bg-saffron-600 px-6 py-4 flex items-center justify-between'>
+        <div className='bg-emerald-600 px-6 py-4 flex items-center justify-between'>
           <h2 className='text-white font-bold flex items-center gap-2'><Calendar size={18} /> Book Inspection Appointment</h2>
           <button onClick={onClose} className='text-white hover:text-green-500'><X size={20} /></button>
         </div>

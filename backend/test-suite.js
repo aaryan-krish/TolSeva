@@ -270,9 +270,87 @@ async function runTests() {
     const missingVerifyRes = await request('GET', '/api/public/verify/NON-EXISTENT-XYZ');
     assert(missingVerifyRes.status === 404, 'Non-existent certificate returns 404');
 
+    // -------------------------------------------------------------------------
+    // 7. Inspector Password Reset via Registered Mobile OTP
+    // -------------------------------------------------------------------------
+    console.log('\n🧪 Test 7: Inspector Password Reset via Registered Mobile OTP');
+
+    // 7.1 Request OTP via Gov ID
+    const resetReqRes = await request('POST', '/api/auth/reset-password/request-otp', {
+      role: 'inspector',
+      identifier: 'LMI-MH-001'
+    });
+    assert(resetReqRes.status === 200, 'Inspector request-otp succeeds for Gov ID LMI-MH-001');
+    assert(resetReqRes.body.phone_masked.endsWith('0001'), 'Dispatched OTP to registered mobile ending in 0001');
+    assert(resetReqRes.body.dev_otp === '123456', 'Demo OTP generated for testing');
+
+    // 7.2 Request OTP directly via registered mobile phone number
+    const resetReqPhoneRes = await request('POST', '/api/auth/reset-password/request-otp', {
+      role: 'inspector',
+      identifier: '9876500001'
+    });
+    assert(resetReqPhoneRes.status === 200, 'Inspector request-otp succeeds using registered mobile number');
+
+    // 7.3 Request OTP for non-existent inspector
+    const resetNonExistRes = await request('POST', '/api/auth/reset-password/request-otp', {
+      role: 'inspector',
+      identifier: 'LMI-UNKNOWN-999'
+    });
+    assert(resetNonExistRes.status === 404, 'Non-existent inspector reset rejected');
+
+    // 7.4 Verify OTP with wrong code -> 401
+    const resetBadOtpRes = await request('POST', '/api/auth/reset-password/verify', {
+      role: 'inspector',
+      identifier: 'LMI-MH-001',
+      otp: '999999',
+      new_password: 'NewInspector@456'
+    });
+    assert(resetBadOtpRes.status === 401, 'Invalid reset OTP rejected');
+
+    // 7.5 Verify OTP and set new password
+    const resetSuccessRes = await request('POST', '/api/auth/reset-password/verify', {
+      role: 'inspector',
+      identifier: 'LMI-MH-001',
+      otp: '123456',
+      new_password: 'NewInspector@456'
+    });
+    assert(resetSuccessRes.status === 200, 'Password reset succeeds with valid OTP and new password');
+
+    // 7.6 Old password should fail
+    const oldLoginRes = await request('POST', '/api/auth/inspector/login', {
+      gov_id: 'LMI-MH-001',
+      password: 'Inspector@123'
+    });
+    assert(oldLoginRes.status === 401, 'Old password fails after reset');
+
+    // 7.7 New password should succeed
+    const newLoginRes = await request('POST', '/api/auth/inspector/login', {
+      gov_id: 'LMI-MH-001',
+      password: 'NewInspector@456'
+    });
+    assert(newLoginRes.status === 200, 'Login succeeds with new password');
+
+    // 7.8 Restore original demo password for ongoing demo consistency
+    await request('POST', '/api/auth/reset-password/request-otp', {
+      role: 'inspector',
+      identifier: 'LMI-MH-001'
+    });
+    await request('POST', '/api/auth/reset-password/verify', {
+      role: 'inspector',
+      identifier: 'LMI-MH-001',
+      otp: '123456',
+      new_password: 'Inspector@123'
+    });
+    const restoredLoginRes = await request('POST', '/api/auth/inspector/login', {
+      gov_id: 'LMI-MH-001',
+      password: 'Inspector@123'
+    });
+    assert(restoredLoginRes.status === 200, 'Restored demo password successfully');
+
     console.log('\n======================================================');
     console.log('🎉 ALL INTEGRATION TESTS PASSED SUCCESSFULLY!');
     console.log('======================================================\n');
+
 
   } finally {
     if (server) {

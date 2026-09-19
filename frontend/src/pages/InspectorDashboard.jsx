@@ -27,12 +27,12 @@ export default function InspectorDashboard() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      <div className='bg-saffron-600 text-white px-4 py-6'>
+      <div className='bg-emerald-600 text-white px-4 py-6'>
         <div className='max-w-5xl mx-auto flex items-center justify-between'>
           <div>
             <div className='flex items-center gap-2 mb-1'>
-              <Shield size={18} className='text-green-500' />
-              <span className='text-green-500 text-sm font-semibold'>Inspector Dashboard</span>
+              <Shield size={18} className='text-orange-500' />
+              <span className='text-orange-500 text-sm font-semibold'>Inspector Dashboard</span>
             </div>
             <h1 className='text-2xl font-bold'>{auth.user?.full_name}</h1>
             <p className='text-blue-200 text-sm'>ID: {auth.user?.gov_id} | Zone: {auth.user?.zone}</p>
@@ -48,7 +48,7 @@ export default function InspectorDashboard() {
           <span className='flex items-center gap-1.5 text-sm font-semibold text-gray-700'><Filter size={15} /> Filter Visits:</span>
           {[{ key: 'all', label: 'All Assigned' }, { key: 'expired', label: '🔴 Expired' }, { key: 'approaching', label: '🟡 Approaching Expiry' }].map(({ key, label }) => (
             <button key={key} onClick={() => setFilter(key)}
-              className={'px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ' + (filter === key ? 'bg-saffron-600 text-white border-saffron-600' : 'bg-white text-gray-700 border-gray-300 hover:border-saffron-400')}>
+              className={'px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ' + (filter === key ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400')}>
               {label}
             </button>
           ))}

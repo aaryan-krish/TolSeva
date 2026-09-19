@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  h1, h2, h3 { font-family: 'Cinzel', serif; }
   body {
     @apply font-sans text-gray-900 bg-gray-50;
   }
@@ -10,19 +11,19 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-saffron-600 text-white px-5 py-2.5 rounded font-semibold hover:bg-saffron-500 transition-colors focus:outline-none focus:ring-2 focus:ring-saffron-400 focus:ring-offset-2;
+    @apply bg-emerald-600 text-white px-5 py-2.5 rounded font-semibold hover:bg-emerald-500 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2;
   }
   .btn-secondary {
-    @apply bg-green-600 text-white px-5 py-2.5 rounded font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+    @apply bg-orange-600 text-white px-5 py-2.5 rounded font-semibold hover:bg-orange-700 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2;
   }
   .btn-outline {
-    @apply border-2 border-saffron-600 text-saffron-600 px-5 py-2.5 rounded font-semibold hover:bg-saffron-600 hover:text-white transition-colors;
+    @apply border-2 border-emerald-600 text-emerald-600 px-5 py-2.5 rounded font-semibold hover:bg-emerald-600 hover:text-white transition-colors;
   }
   .card {
     @apply bg-white rounded-lg shadow-md border border-gray-200 p-6;
   }
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-saffron-400 focus:border-saffron-400 text-sm;
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm;
   }
   .badge-expired {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300;
@@ -43,7 +44,7 @@
 
 /* Government tricolor top strip */
 .tricolor-strip {
-  background: linear-gradient(to right, #FF9933 33.33%, #FFFFFF 33.33% 66.66%, #138808 66.66%);
+  background: linear-gradient(to right, #059669 33.33%, #FFFFFF 33.33% 66.66%, #ea580c 66.66%);
   height: 5px;
 }
 

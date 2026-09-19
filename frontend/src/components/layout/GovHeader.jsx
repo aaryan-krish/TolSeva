@@ -7,12 +7,11 @@ export default function GovHeader() {
   return (
     <>
       <div className="tricolor-strip" />
-      <header className="bg-saffron-600 text-white">
+      <header className="bg-emerald-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
-            {/* Emblem placeholder */}
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-lg border-2 border-green-600">
-              <span className="text-saffron-600 font-bold text-[10px] sm:text-xs text-center leading-tight px-1">GoI Emblem</span>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center flex-shrink-0 p-1 shadow-md">
+              <img src="/logo.png" alt="TolSeva Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <p className="text-green-500 text-[11px] sm:text-xs font-semibold uppercase tracking-widest">{t('ministry')}</p>

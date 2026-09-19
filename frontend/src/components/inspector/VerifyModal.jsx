@@ -39,7 +39,7 @@ export default function VerifyModal({ visit, onClose, onSuccess }) {
           <div className='text-5xl mb-4'>🏅</div>
           <p className='text-green-700 font-bold text-lg'>Verification Successful!</p>
           <p className='text-sm text-gray-600 mt-2'>Certificate No:</p>
-          <p className='font-mono font-bold text-saffron-600 text-sm mt-1'>{cert.certificate_no}</p>
+          <p className='font-mono font-bold text-emerald-600 text-sm mt-1'>{cert.certificate_no}</p>
           <p className='text-sm text-gray-600 mt-3'>Valid Until: <span className='font-semibold'>{new Date(cert.valid_until).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</span></p>
           {cert.qr_data_url && (
             <div className='mt-4'>
@@ -56,7 +56,7 @@ export default function VerifyModal({ visit, onClose, onSuccess }) {
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
       <div className='bg-white w-full max-w-lg rounded-xl shadow-2xl'>
-        <div className='bg-saffron-600 px-6 py-4 flex items-center justify-between'>
+        <div className='bg-emerald-600 px-6 py-4 flex items-center justify-between'>
           <h2 className='text-white font-bold'>Field Verification</h2>
           <button onClick={onClose} className='text-white hover:text-green-500'><X size={20} /></button>
         </div>

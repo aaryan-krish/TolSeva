@@ -28,9 +28,9 @@ function Counter({ end, duration = 2000, suffix = '' }) {
 }
 
 const stats = [
-  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-saffron-600' },
-  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-indiaGreen' },
-  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-saffron-500' },
+  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-emerald-600' },
+  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-orange-600' },
+  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-emerald-500' },
   { label: 'Certificates Issued', value: 31500, suffix: '+', icon: '📜', color: 'text-green-700' }
 ]
 
