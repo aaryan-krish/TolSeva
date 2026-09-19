@@ -32,6 +32,8 @@ export const requestVendorOtp = (data) => api.post('/auth/vendor/request-otp', d
 export const verifyVendorOtp = (data) => api.post('/auth/vendor/verify-otp', data)
 export const inspectorLogin = (data) => api.post('/auth/inspector/login', data)
 export const adminLogin = (data) => api.post('/auth/admin/login', data)
+export const requestPasswordResetOtp = (data) => api.post('/auth/reset-password/request-otp', data)
+export const verifyPasswordReset = (data) => api.post('/auth/reset-password/verify', data)
 
 // Vendor
 export const getMachines = () => api.get('/vendor/machines')

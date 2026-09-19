@@ -53,10 +53,10 @@ export default function AdminDashboard() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      <div className='bg-navy-900 text-white px-4 py-6'>
+      <div className='bg-saffron-600 text-white px-4 py-6'>
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           <div>
-            <div className='flex items-center gap-2 mb-1'><Crown size={18} className='text-gold-400' /><span className='text-gold-400 text-sm font-semibold'>Admin Dashboard</span></div>
+            <div className='flex items-center gap-2 mb-1'><Crown size={18} className='text-green-500' /><span className='text-green-500 text-sm font-semibold'>Admin Dashboard</span></div>
             <h1 className='text-2xl font-bold'>System Administration</h1>
             <p className='text-blue-200 text-sm'>TolSeva Control Panel</p>
           </div>
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
         <div className='flex gap-1 bg-gray-200 rounded-lg p-1 w-fit mb-6'>
           {tabs.map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setActiveTab(key)}
-              className={'flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold transition-colors ' + (activeTab === key ? 'bg-white text-navy-900 shadow' : 'text-gray-600 hover:text-gray-900')}>
+              className={'flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold transition-colors ' + (activeTab === key ? 'bg-white text-saffron-600 shadow' : 'text-gray-600 hover:text-gray-900')}>
               <Icon size={15} /> {label}
             </button>
           ))}
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
         {loading ? (
           <div className='flex justify-center py-20'>
-            <div className='animate-spin w-10 h-10 border-4 border-navy-900 border-t-transparent rounded-full' />
+            <div className='animate-spin w-10 h-10 border-4 border-saffron-600 border-t-transparent rounded-full' />
           </div>
         ) : (
           <>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                         <td className='px-4 py-3'>{v.owner_name}</td>
                         <td className='px-4 py-3'>{v.phone}</td>
                         <td className='px-4 py-3'>{v.city}, {v.state}</td>
-                        <td className='px-4 py-3 font-bold text-navy-900'>{v.instrument_count}</td>
+                        <td className='px-4 py-3 font-bold text-saffron-600'>{v.instrument_count}</td>
                       </tr>
                     ))}
                   </tbody>

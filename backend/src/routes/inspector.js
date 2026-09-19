@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticate = require('../middleware/auth');
-const { query } = require('../config/db');
+const { query, getDb } = require('../config/db');
 const { buildCertificateQR, generateCertificateNo } = require('../utils/qrPayload');
 
 const inspectorAuth = authenticate(['inspector']);
@@ -10,32 +10,54 @@ const inspectorAuth = authenticate(['inspector']);
 router.get('/assigned-visits', inspectorAuth, async (req, res, next) => {
   try {
     const { filter } = req.query; // 'expired' | 'approaching' | 'all'
+    const db = getDb();
 
-    let statusFilter = '';
-    if (filter === 'expired') statusFilter = `AND i.expiry_date < CURRENT_DATE`;
-    else if (filter === 'approaching') statusFilter = `AND i.expiry_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '90 days'`;
+    const appointments = await db.collection('appointments').find({
+      $or: [{ inspector_id: req.user.id }, { inspectorId: req.user.id }],
+      status: { $nin: ['COMPLETED', 'CANCELLED'] }
+    }).sort({ preferred_date: 1 }).toArray();
 
-    const result = await query(
-      `SELECT
-         a.*,
-         i.make, i.model, i.serial_no, i.instrument_type, i.expiry_date, i.capacity, i.unit,
-         v.business_name, v.owner_name, v.phone AS vendor_phone, v.address,
-         CASE
-           WHEN i.expiry_date < CURRENT_DATE THEN 'EXPIRED'
-           WHEN i.expiry_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'EXPIRING_SOON'
-           WHEN i.expiry_date <= CURRENT_DATE + INTERVAL '90 days' THEN 'APPROACHING'
-           ELSE 'VALID'
-         END AS expiry_status
-       FROM appointments a
-       JOIN instruments i ON a.instrument_id = i.id
-       JOIN vendors v ON a.vendor_id = v.id
-       WHERE a.inspector_id = $1
-         AND a.status NOT IN ('COMPLETED','CANCELLED')
-         ${statusFilter}
-       ORDER BY i.expiry_date ASC, a.preferred_date ASC`,
-      [req.user.id]
-    );
-    res.json({ visits: result.rows, total: result.rowCount });
+    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date(todayStr);
+
+    const visits = [];
+    for (const a of appointments) {
+      const inst = a.instrument_id ? await db.collection('instruments').findOne({ id: a.instrument_id }) : null;
+      const vend = a.vendor_id ? await db.collection('vendors').findOne({ id: a.vendor_id }) : null;
+
+      let expiryStatus = 'VALID';
+      if (inst && inst.expiry_date) {
+        const expDate = new Date(inst.expiry_date);
+        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) expiryStatus = 'EXPIRED';
+        else if (diffDays <= 30) expiryStatus = 'EXPIRING_SOON';
+        else if (diffDays <= 90) expiryStatus = 'APPROACHING';
+      }
+
+      // Filter check
+      if (filter === 'expired' && expiryStatus !== 'EXPIRED') continue;
+      if (filter === 'approaching' && !['EXPIRING_SOON', 'APPROACHING'].includes(expiryStatus)) continue;
+
+      visits.push({
+        ...a,
+        make: inst?.make || null,
+        model: inst?.model || null,
+        serial_no: inst?.serial_no || null,
+        instrument_type: inst?.instrument_type || null,
+        expiry_date: inst?.expiry_date || null,
+        capacity: inst?.capacity || null,
+        unit: inst?.unit || null,
+        business_name: vend?.business_name || null,
+        owner_name: vend?.owner_name || null,
+        vendor_phone: vend?.phone || null,
+        address: vend?.address || null,
+        latitude: vend?.latitude || null,
+        longitude: vend?.longitude || null,
+        expiry_status: expiryStatus
+      });
+    }
+
+    res.json({ visits, total: visits.length });
   } catch (err) {
     next(err);
   }
@@ -44,21 +66,26 @@ router.get('/assigned-visits', inspectorAuth, async (req, res, next) => {
 // ── POST /api/inspector/verify ───────────────────────────────────────────────
 router.post('/verify', inspectorAuth, async (req, res, next) => {
   try {
-    const { appointment_id, instrument_id, test_result, observations, error_percentage, photo_url, valid_months } = req.body;
-    if (!instrument_id || !test_result) {
+    const { appointment_id, appointmentId, instrument_id, instrumentId, test_result, testResult, observations, error_percentage, photo_url, valid_months } = req.body;
+    const targetInstId = instrument_id || instrumentId;
+    const targetAppId = appointment_id || appointmentId;
+    const resultStatus = test_result || testResult;
+
+    if (!targetInstId || !resultStatus) {
       return res.status(400).json({ error: 'Instrument ID and test result are required' });
     }
 
-    // Get instrument details
-    const instResult = await query('SELECT * FROM instruments WHERE id = $1', [instrument_id]);
-    const instrument = instResult.rows[0];
+    const db = getDb();
+    const instrument = await db.collection('instruments').findOne({ id: targetInstId });
     if (!instrument) return res.status(404).json({ error: 'Instrument not found' });
 
-    // Generate certificate
+    // Generate certificate number
     const certNo = generateCertificateNo(req.user.gov_id);
     const validUntil = new Date();
-    validUntil.setMonth(validUntil.getMonth() + (valid_months || 12));
+    validUntil.setMonth(validUntil.getMonth() + (Number(valid_months) || 12));
+    const validUntilStr = validUntil.toISOString().split('T')[0];
 
+    // Build QR code with FULL public verification URL
     const { payload: qrPayload, qrDataUrl } = await buildCertificateQR({
       certificateNo: certNo,
       instrumentId: instrument.id,
@@ -66,40 +93,62 @@ router.post('/verify', inspectorAuth, async (req, res, next) => {
       make: instrument.make,
       model: instrument.model,
       inspectorGovId: req.user.gov_id,
-      testResult: test_result,
+      testResult: resultStatus,
       verifiedAt: new Date().toISOString(),
-      validUntil: validUntil.toISOString().split('T')[0]
+      validUntil: validUntilStr
     });
 
-    // Insert verification log
-    const logResult = await query(
-      `INSERT INTO verification_logs
-         (appointment_id, instrument_id, inspector_id, test_result, observations, error_percentage, photo_url, qr_payload, certificate_no, valid_until)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING *`,
-      [appointment_id || null, instrument_id, req.user.id, test_result, observations, error_percentage || null, photo_url || null, qrPayload, certNo, validUntil.toISOString().split('T')[0]]
+    const newLog = {
+      id: `log-${Date.now()}`,
+      appointment_id: targetAppId || null,
+      appointmentId: targetAppId || null,
+      instrument_id: targetInstId,
+      instrumentId: targetInstId,
+      inspector_id: req.user.id,
+      inspectorId: req.user.id,
+      test_result: resultStatus,
+      observations: observations || null,
+      error_percentage: error_percentage != null ? Number(error_percentage) : null,
+      photo_url: photo_url || null,
+      qr_payload: qrPayload, // Full public URL
+      certificate_no: certNo,
+      certificateNo: certNo,
+      valid_until: validUntilStr,
+      validUntil: validUntilStr,
+      verified_at: new Date()
+    };
+
+    await db.collection('verification_logs').insertOne(newLog);
+
+    // Update instrument status and expiry date
+    const newStatus = ['PASS', 'CONDITIONAL_PASS'].includes(resultStatus.toUpperCase()) ? 'ACTIVE' : 'SUSPENDED';
+    await db.collection('instruments').updateOne(
+      { id: targetInstId },
+      {
+        $set: {
+          status: newStatus,
+          last_verified_at: new Date(),
+          expiry_date: validUntilStr,
+          updated_at: new Date()
+        }
+      }
     );
 
-    // Update instrument status and expiry
-    const newStatus = test_result === 'PASS' || test_result === 'CONDITIONAL_PASS' ? 'ACTIVE' : 'SUSPENDED';
-    await query(
-      `UPDATE instruments
-       SET status = $1, last_verified_at = NOW(), expiry_date = $2, updated_at = NOW()
-       WHERE id = $3`,
-      [newStatus, validUntil.toISOString().split('T')[0], instrument_id]
-    );
-
-    // Update appointment status
-    if (appointment_id) {
-      await query(`UPDATE appointments SET status = 'COMPLETED', updated_at = NOW() WHERE id = $1`, [appointment_id]);
+    // Update appointment status if applicable
+    if (targetAppId) {
+      await db.collection('appointments').updateOne(
+        { id: targetAppId },
+        { $set: { status: 'COMPLETED', updated_at: new Date() } }
+      );
     }
 
     res.status(201).json({
       message: 'Verification completed successfully',
-      log: logResult.rows[0],
+      log: newLog,
       certificate_no: certNo,
+      qr_payload: qrPayload,
       qr_data_url: qrDataUrl,
-      valid_until: validUntil.toISOString().split('T')[0]
+      valid_until: validUntilStr
     });
   } catch (err) {
     next(err);
@@ -109,16 +158,26 @@ router.post('/verify', inspectorAuth, async (req, res, next) => {
 // ── GET /api/inspector/certificate/:id ───────────────────────────────────────
 router.get('/certificate/:id', inspectorAuth, async (req, res, next) => {
   try {
-    const result = await query(
-      `SELECT vl.*, i.make, i.model, i.serial_no, v.business_name
-       FROM verification_logs vl
-       JOIN instruments i ON vl.instrument_id = i.id
-       JOIN vendors v ON i.vendor_id = v.id
-       WHERE vl.id = $1 AND vl.inspector_id = $2`,
-      [req.params.id, req.user.id]
-    );
-    if (!result.rows[0]) return res.status(404).json({ error: 'Certificate not found' });
-    res.json({ certificate: result.rows[0] });
+    const db = getDb();
+    const cert = await db.collection('verification_logs').findOne({
+      $or: [{ id: req.params.id }, { certificate_no: req.params.id }],
+      $or: [{ inspector_id: req.user.id }, { inspectorId: req.user.id }]
+    });
+
+    if (!cert) return res.status(404).json({ error: 'Certificate not found or unauthorized' });
+
+    const instrument = await db.collection('instruments').findOne({ id: cert.instrument_id || cert.instrumentId });
+    const vendor = instrument ? await db.collection('vendors').findOne({ id: instrument.vendor_id }) : null;
+
+    res.json({
+      certificate: {
+        ...cert,
+        make: instrument?.make || null,
+        model: instrument?.model || null,
+        serial_no: instrument?.serial_no || null,
+        business_name: vendor?.business_name || null
+      }
+    });
   } catch (err) {
     next(err);
   }

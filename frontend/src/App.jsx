@@ -26,14 +26,14 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
-          <footer className="bg-navy-900 text-white py-8">
+          <footer className="bg-saffron-600 text-white py-8">
             <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-3 gap-6 text-sm">
               <div>
-                <h4 className="font-bold text-gold-400 mb-2">TolSeva</h4>
+                <h4 className="font-bold text-green-500 mb-2">TolSeva</h4>
                 <p className="text-gray-300">Unified Online Verification &amp; Certification Platform for Legal Metrology</p>
               </div>
               <div>
-                <h4 className="font-bold text-gold-400 mb-2">Quick Links</h4>
+                <h4 className="font-bold text-green-500 mb-2">Quick Links</h4>
                 <ul className="space-y-1 text-gray-300">
                   <li><a href="#about" className="hover:text-white">About Legal Metrology</a></li>
                   <li><a href="#services" className="hover:text-white">Our Services</a></li>
@@ -41,7 +41,7 @@ function App() {
                 </ul>
               </div>
               <div>
-                <h4 className="font-bold text-gold-400 mb-2">Helpline</h4>
+                <h4 className="font-bold text-green-500 mb-2">Helpline</h4>
                 <p className="text-gray-300">Toll-free: 1800-11-4000</p>
                 <p className="text-gray-300">lmd.support@consumeraffairs.gov.in</p>
                 <p className="text-gray-300 mt-2">© 2026 Government of India</p>

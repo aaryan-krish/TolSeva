@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#003087"
+      "backgroundColor": "#FF9933"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,10 +21,16 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#003087"
+        "backgroundColor": "#FF9933"
       },
       "package": "in.gov.tolseva",
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -62,6 +68,12 @@
         "projectId": "337729e5-f7f2-4b89-84e8-2038c5e7ecbe"
       }
     },
-    "owner": "tolseva"
+    "owner": "tolseva",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/337729e5-f7f2-4b89-84e8-2038c5e7ecbe"
+    }
   }
 }

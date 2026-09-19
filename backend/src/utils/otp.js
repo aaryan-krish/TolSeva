@@ -1,9 +1,23 @@
 /**
- * OTP utility — generates 6-digit OTP and simulates SMS delivery
- * In production, replace console.log with real SMS gateway (Twilio/AWS SNS)
+ * OTP utility with DEMO_MODE support
+ * When DEMO_MODE=true, generates and validates fixed OTP '123456'.
+ * In production or DEMO_MODE=false, generates a secure random 6-digit OTP.
  */
 
+const DEMO_OTP = '123456';
+
+function isDemoMode() {
+  if (process.env.DEMO_MODE !== undefined) {
+    return process.env.DEMO_MODE === 'true' || process.env.DEMO_MODE === true || process.env.DEMO_MODE === '1';
+  }
+  // Default to true in non-production environments
+  return process.env.NODE_ENV !== 'production';
+}
+
 function generateOtp() {
+  if (isDemoMode()) {
+    return DEMO_OTP;
+  }
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
@@ -14,11 +28,33 @@ function getOtpExpiry(minutesFromNow = 10) {
 }
 
 async function sendOtp(phone, otp) {
-  // Simulate SMS dispatch
+  if (isDemoMode()) {
+    console.log(`\n📱 [DEMO MODE OTP] To: +91${phone} | OTP: ${otp} (Fixed Demo OTP: ${DEMO_OTP})\n`);
+    return true;
+  }
   console.log(`\n📱 [SIMULATED SMS] To: +91${phone} | OTP: ${otp} | Valid: 10 minutes\n`);
-  // TODO: Integrate real SMS gateway
-  // await twilioClient.messages.create({ to: phone, from: ..., body: `Your TolSeva OTP: ${otp}` });
   return true;
 }
 
-module.exports = { generateOtp, getOtpExpiry, sendOtp };
+function verifyOtpValue(enteredOtp, storedOtp, expiresAt) {
+  const input = String(enteredOtp || '').trim();
+  if (isDemoMode() && input === DEMO_OTP) {
+    return { valid: true };
+  }
+  if (!storedOtp || input !== String(storedOtp).trim()) {
+    return { valid: false, reason: 'Invalid OTP' };
+  }
+  if (expiresAt && new Date() > new Date(expiresAt)) {
+    return { valid: false, reason: 'OTP expired. Please request a new one.' };
+  }
+  return { valid: true };
+}
+
+module.exports = {
+  DEMO_OTP,
+  isDemoMode,
+  generateOtp,
+  getOtpExpiry,
+  sendOtp,
+  verifyOtpValue
+};

@@ -26,9 +26,9 @@ export default function AddMachineModal({ onClose, onSuccess }) {
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
       <div className='bg-white w-full max-w-lg rounded-xl shadow-2xl max-h-[90vh] flex flex-col'>
-        <div className='bg-navy-900 px-6 py-4 flex items-center justify-between flex-shrink-0'>
+        <div className='bg-saffron-600 px-6 py-4 flex items-center justify-between flex-shrink-0'>
           <h2 className='text-white font-bold flex items-center gap-2'><Plus size={18} /> Register New Instrument</h2>
-          <button onClick={onClose} className='text-white hover:text-gold-400'><X size={20} /></button>
+          <button onClick={onClose} className='text-white hover:text-green-500'><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className='p-6 space-y-4 overflow-y-auto'>
           {error && <div className='p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm'>{error}</div>}

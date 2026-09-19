@@ -1,95 +1,79 @@
-const { Pool } = require('pg');
+require('dotenv').config();
+const { MongoClient } = require('mongodb');
 
-const isRemoteHost = process.env.DB_HOST && !['localhost', '127.0.0.1'].includes(process.env.DB_HOST);
-const useSSL = process.env.DB_SSL === 'true' || isRemoteHost || !!process.env.DATABASE_URL;
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+const mongoDbName = process.env.MONGODB_DB || 'tolseva';
+const client = mongoUri ? new MongoClient(mongoUri, { serverSelectionTimeoutMS: 5000 }) : null;
+let database = null;
+let isMongoAvailable = false;
 
-const poolConfig = process.env.DATABASE_URL
-  ? {
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    }
-  : {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME || 'tolseva_db',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-      ssl: useSSL ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    };
-
-const pool = new Pool(poolConfig);
-let isPgAvailable = false;
-
-pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL client error', err);
-  process.exit(-1);
-});
-
-async function testConnection() {
-  const client = await pool.connect();
-  try {
-    const res = await client.query('SELECT NOW()');
-    console.log('✅ PostgreSQL connected at:', res.rows[0].now);
-  } finally {
-    client.release();
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// IN-MEMORY FALLBACK DATABASE (Active when PostgreSQL is offline)
-// ─────────────────────────────────────────────────────────────────────────────
-const memStore = {
-  admins: [
-    {
-      id: 'adm-001',
-      username: 'admin',
-      password_hash: '$2a$10$ZQuVDPiEwciGG7F2Kc/qMuGkOeiXBPirNxpQSNg2o32i6jjW4nmDS',
-      full_name: 'System Administrator',
-      created_at: new Date()
-    }
-  ],
+const memory = {
+  admins: [{
+    id: 'adm-001',
+    username: 'admin',
+    phone: '9876500000',
+    password_hash: '$2a$10$ZQuVDPiEwciGG7F2Kc/qMuGkOeiXBPirNxpQSNg2o32i6jjW4nmDS',
+    full_name: 'System Administrator',
+    otp: null,
+    otp_expires_at: null
+  }],
   inspectors: [
     {
       id: 'ins-001',
       gov_id: 'LMI-MH-001',
       full_name: 'Rajesh Kumar Singh',
-      department: 'Legal Metrology, Maharashtra',
-      designation: 'Senior Inspector',
-      zone: 'Mumbai',
       phone: '9876500001',
+      designation: 'Senior Inspector',
+      zone: 'Mumbai Central',
+      department: 'Legal Metrology, Maharashtra',
       email: 'rajesh.singh@lm.gov.in',
+      baseLatitude: 19.0330,
+      baseLongitude: 72.8550,
+      base_latitude: 19.0330,
+      base_longitude: 72.8550,
       password_hash: '$2a$10$F5CG2/qgBEzwEptfK8Oa2ehgqYx0fWrDSTFhQ1VJCCieOqRHJupDW',
       is_active: true,
-      created_at: new Date()
+      otp: null,
+      otp_expires_at: null,
+      created_at: new Date('2025-01-01')
     },
     {
       id: 'ins-002',
       gov_id: 'LMI-MH-002',
       full_name: 'Priya Deshmukh',
-      department: 'Legal Metrology, Maharashtra',
-      designation: 'Inspector',
-      zone: 'Pune',
       phone: '9876500002',
+      designation: 'Inspector',
+      zone: 'Mumbai Suburbs',
+      department: 'Legal Metrology, Maharashtra',
       email: 'priya.deshmukh@lm.gov.in',
+      baseLatitude: 19.1197,
+      baseLongitude: 72.8464,
+      base_latitude: 19.1197,
+      base_longitude: 72.8464,
       password_hash: '$2a$10$F5CG2/qgBEzwEptfK8Oa2ehgqYx0fWrDSTFhQ1VJCCieOqRHJupDW',
       is_active: true,
-      created_at: new Date()
+      otp: null,
+      otp_expires_at: null,
+      created_at: new Date('2025-01-01')
     },
     {
       id: 'ins-003',
-      gov_id: 'LMI-DL-001',
-      full_name: 'Amit Sharma',
-      department: 'Legal Metrology, Delhi',
-      designation: 'Inspector',
-      zone: 'New Delhi',
+      gov_id: 'LMI-MH-003',
+      full_name: 'Vikram Patil',
       phone: '9876500003',
-      email: 'amit.sharma@lm.gov.in',
+      designation: 'Inspector',
+      zone: 'Thane',
+      department: 'Legal Metrology, Maharashtra',
+      email: 'vikram.patil@lm.gov.in',
+      baseLatitude: 19.2000,
+      baseLongitude: 72.9700,
+      base_latitude: 19.2000,
+      base_longitude: 72.9700,
       password_hash: '$2a$10$F5CG2/qgBEzwEptfK8Oa2ehgqYx0fWrDSTFhQ1VJCCieOqRHJupDW',
       is_active: true,
-      created_at: new Date()
+      otp: null,
+      otp_expires_at: null,
+      created_at: new Date('2025-01-01')
     }
   ],
   vendors: [
@@ -99,31 +83,74 @@ const memStore = {
       business_name: 'Sharma Kirana & General Stores',
       owner_name: 'Ramesh Sharma',
       phone: '9811223344',
-      email: 'ramesh@sharmakiranastore.in',
-      address: 'Shop 12, Main Market, Andheri West',
+      email: 'ramesh@sharma.com',
+      address: 'Shop 12, Dadar Market, Mumbai',
       city: 'Mumbai',
       state: 'Maharashtra',
-      pincode: '400058',
-      otp: null,
-      otp_expires_at: null,
+      latitude: 19.0178,
+      longitude: 72.8478,
       is_verified: true,
-      created_at: new Date()
+      created_at: new Date('2025-01-10')
     },
     {
       id: 'ven-002',
-      gstin: '07AAACR5055K1Z5',
-      business_name: 'Delhi Scales & Commercial Measures',
-      owner_name: 'Suresh Verma',
+      gstin: '27AABCB1234F1Z1',
+      business_name: 'Apex Sweets & Dairy',
+      owner_name: 'Kavita Joshi',
       phone: '9811223355',
-      email: 'suresh@delhiscales.com',
-      address: 'Plot 45, Sector 18, Rohini',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110085',
-      otp: null,
-      otp_expires_at: null,
+      email: 'kavita@apexsweets.com',
+      address: 'Hill Road, Bandra West, Mumbai',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      latitude: 19.0596,
+      longitude: 72.8295,
       is_verified: true,
-      created_at: new Date()
+      created_at: new Date('2025-01-12')
+    },
+    {
+      id: 'ven-003',
+      gstin: '27AABCT5678M1Z2',
+      business_name: 'Metro Wholesale Provisions',
+      owner_name: 'Harish Mehta',
+      phone: '9811223366',
+      email: 'harish@metrowholesale.com',
+      address: 'MIDC, Andheri East, Mumbai',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      latitude: 19.1136,
+      longitude: 72.8697,
+      is_verified: true,
+      created_at: new Date('2025-01-15')
+    },
+    {
+      id: 'ven-004',
+      gstin: '27AAECP9876Q1Z3',
+      business_name: 'Kalyan Jewellers & Precision',
+      owner_name: 'Sunil Verma',
+      phone: '9811223377',
+      email: 'sunil@kalyanjewellers.com',
+      address: 'Gokhale Road, Naupada, Thane West',
+      city: 'Thane',
+      state: 'Maharashtra',
+      latitude: 19.2183,
+      longitude: 72.9781,
+      is_verified: true,
+      created_at: new Date('2025-01-18')
+    },
+    {
+      id: 'ven-005',
+      gstin: '27AACCB4321R1Z4',
+      business_name: 'Borivali Grain Merchant',
+      owner_name: 'Anand Patel',
+      phone: '9811223388',
+      email: 'anand@borivaligrain.com',
+      address: 'SV Road, Borivali West, Mumbai',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      latitude: 19.2307,
+      longitude: 72.8567,
+      is_verified: true,
+      created_at: new Date('2025-01-20')
     }
   ],
   instruments: [
@@ -132,439 +159,618 @@ const memStore = {
       vendor_id: 'ven-001',
       make: 'Essae Teraoka',
       model: 'DS-852',
-      serial_no: 'SN-0939-001',
+      serial_no: 'SN-F1ZV-001',
       instrument_type: 'Electronic Platform Scale',
       capacity: '150',
       unit: 'kg',
-      manufacture_year: 2021,
-      installation_date: '2021-03-15',
-      last_verified_at: new Date(Date.now() - 380 * 86400000),
-      expiry_date: new Date(Date.now() - 15 * 86400000).toISOString().split('T')[0],
+      manufacture_year: 2024,
+      installation_date: '2024-02-15',
+      location_description: 'Main Counter',
       status: 'ACTIVE',
-      location_description: 'Counter No. 1, Front Shop'
+      expiry_date: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      last_verified_at: new Date(),
+      created_at: new Date()
     },
     {
       id: 'inst-002',
       vendor_id: 'ven-001',
       make: 'Avery Weigh-Tronix',
       model: 'ZK830',
-      serial_no: 'SN-0939-002',
+      serial_no: 'SN-F1ZV-002',
       instrument_type: 'Counter Scale',
       capacity: '30',
       unit: 'kg',
       manufacture_year: 2023,
-      installation_date: '2023-01-10',
-      last_verified_at: new Date(Date.now() - 340 * 86400000),
-      expiry_date: new Date(Date.now() + 25 * 86400000).toISOString().split('T')[0],
+      installation_date: '2023-05-10',
+      location_description: 'Side Weighing Bay',
       status: 'ACTIVE',
-      location_description: 'Packaging Desk'
+      // Past expiry date with NO future appointment -> Expiry Defaulter!
+      expiry_date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      last_verified_at: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000),
+      created_at: new Date()
     },
     {
       id: 'inst-003',
-      vendor_id: 'ven-001',
+      vendor_id: 'ven-002',
       make: 'Mettler Toledo',
       model: 'ICS465',
-      serial_no: 'SN-0939-003',
+      serial_no: 'SN-1Z1-001',
       instrument_type: 'Bench Scale',
       capacity: '60',
       unit: 'kg',
       manufacture_year: 2024,
-      installation_date: '2024-02-20',
-      last_verified_at: new Date(Date.now() - 290 * 86400000),
-      expiry_date: new Date(Date.now() + 75 * 86400000).toISOString().split('T')[0],
+      installation_date: '2024-03-01',
+      location_description: 'Sweet Packaging Section',
       status: 'ACTIVE',
-      location_description: 'Bulk Storage Room'
+      expiry_date: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      last_verified_at: new Date(),
+      created_at: new Date()
+    },
+    {
+      id: 'inst-004',
+      vendor_id: 'ven-002',
+      make: 'Sartorius',
+      model: 'Entris II',
+      serial_no: 'SN-1Z1-002',
+      instrument_type: 'Precision Balance',
+      capacity: '5',
+      unit: 'kg',
+      manufacture_year: 2022,
+      installation_date: '2022-08-15',
+      location_description: 'Quality Lab',
+      status: 'SUSPENDED',
+      // Expired certificate
+      expiry_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      last_verified_at: new Date(Date.now() - 425 * 24 * 60 * 60 * 1000),
+      created_at: new Date()
+    },
+    {
+      id: 'inst-005',
+      vendor_id: 'ven-003',
+      make: 'Eagle Scales',
+      model: 'EP-500',
+      serial_no: 'SN-1Z2-001',
+      instrument_type: 'Heavy Platform Scale',
+      capacity: '500',
+      unit: 'kg',
+      manufacture_year: 2025,
+      installation_date: '2025-01-10',
+      location_description: 'Loading Dock',
+      status: 'PENDING',
+      expiry_date: null,
+      last_verified_at: null,
+      created_at: new Date()
     }
   ],
   appointments: [
     {
-      id: 'app-001',
+      id: 'app-init-001',
       vendor_id: 'ven-001',
       instrument_id: 'inst-001',
       inspector_id: 'ins-001',
-      preferred_date: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-      preferred_time: '11:00:00',
-      purpose: 'RENEWAL',
+      preferred_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      preferred_time: 'MORNING',
+      purpose: 'Annual Verification',
+      vendor_notes: 'Inspector requested morning slot',
+      status: 'CONFIRMED',
+      created_at: new Date()
+    },
+    {
+      id: 'app-init-002',
+      vendor_id: 'ven-003',
+      instrument_id: 'inst-005',
+      inspector_id: null,
+      preferred_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      preferred_time: 'AFTERNOON',
+      purpose: 'New Stamping & Verification',
+      vendor_notes: 'New machine awaiting initial verification',
       status: 'PENDING',
-      vendor_notes: 'Urgent annual renewal for expired counter scale'
+      created_at: new Date()
     }
   ],
-  verification_logs: []
+  verification_logs: [
+    {
+      id: 'log-001',
+      appointment_id: 'app-init-001',
+      instrument_id: 'inst-001',
+      inspector_id: 'ins-001',
+      test_result: 'PASS',
+      observations: 'All test weights within legal tolerance (±0.01%). Stamped.',
+      error_percentage: 0.01,
+      photo_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
+      qr_payload: 'https://tolseva.gov.in/verify/LM-MH-001-2026-VAL101',
+      certificate_no: 'LM-MH-001-2026-VAL101',
+      valid_until: new Date(Date.now() + 240 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      verified_at: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: 'log-002',
+      appointment_id: null,
+      instrument_id: 'inst-004',
+      inspector_id: 'ins-002',
+      test_result: 'PASS',
+      observations: 'Passed previous annual inspection.',
+      error_percentage: 0.02,
+      photo_url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
+      qr_payload: 'https://tolseva.gov.in/verify/LM-MH-002-2025-EXP202',
+      certificate_no: 'LM-MH-002-2025-EXP202',
+      // Past validity date -> EXPIRED certificate!
+      valid_until: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      verified_at: new Date(Date.now() - 425 * 24 * 60 * 60 * 1000)
+    }
+  ],
+  complaints: [
+    {
+      id: 'cmp-001',
+      type: 'VENDOR_AGAINST_INSPECTOR',
+      vendorId: 'ven-001',
+      inspectorId: 'ins-001',
+      instrumentId: null,
+      certificateId: null,
+      appointmentId: 'app-init-001',
+      category: 'INSPECTION_DELAY',
+      description: 'Scheduled visit was delayed by 3 hours without prior notice from the inspector.',
+      evidenceUrl: null,
+      status: 'OPEN',
+      adminNotes: null,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: 'cmp-002',
+      type: 'PUBLIC_ABOUT_INSTRUMENT',
+      vendorId: 'ven-002',
+      inspectorId: 'ins-002',
+      instrumentId: 'inst-004',
+      certificateId: 'LM-MH-002-2025-EXP202',
+      appointmentId: null,
+      category: 'EXPIRED_VERIFICATION',
+      description: 'The counter scale in the retail section has an expired verification seal and lacks current certificate.',
+      evidenceUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500',
+      status: 'INVESTIGATING',
+      adminNotes: 'Assigned to regional supervisor for surprise check.',
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date()
+    }
+  ]
+};
+
+const response = rows => ({ rows, rowCount: rows.length });
+const escapeRegex = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function matchDoc(doc, filter = {}) {
+  if (!filter || Object.keys(filter).length === 0) return true;
+  for (const [key, val] of Object.entries(filter)) {
+    if (key === '$or' && Array.isArray(val)) {
+      if (!val.some(sub => matchDoc(doc, sub))) return false;
+      continue;
+    }
+    const docVal = doc[key];
+    if (val instanceof RegExp) {
+      if (!val.test(String(docVal || ''))) return false;
+    } else if (val && typeof val === 'object') {
+      if (val.$nin && Array.isArray(val.$nin)) {
+        if (val.$nin.includes(docVal)) return false;
+      }
+      if (val.$in && Array.isArray(val.$in)) {
+        if (!val.$in.includes(docVal)) return false;
+      }
+      if (val.$ne !== undefined) {
+        if (docVal === val.$ne) return false;
+      }
+      if (val.$gte !== undefined) {
+        if (!(docVal >= val.$gte)) return false;
+      }
+      if (val.$lte !== undefined) {
+        if (!(docVal <= val.$lte)) return false;
+      }
+      if (val.$gt !== undefined) {
+        if (!(docVal > val.$gt)) return false;
+      }
+      if (val.$lt !== undefined) {
+        if (!(docVal < val.$lt)) return false;
+      }
+    } else if (docVal !== val) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function applyUpdate(doc, update = {}) {
+  if (update.$set) {
+    Object.assign(doc, update.$set);
+  }
+  return doc;
+}
+
+function createMemoryCollection(name) {
+  if (!memory[name]) memory[name] = [];
+  const list = memory[name];
+
+  return {
+    find: (filter = {}) => {
+      let filtered = list.filter(item => matchDoc(item, filter));
+      const cursor = {
+        _items: filtered,
+        sort: (sortObj = {}) => {
+          const keys = Object.keys(sortObj);
+          if (keys.length > 0) {
+            cursor._items.sort((a, b) => {
+              for (const k of keys) {
+                const dir = sortObj[k];
+                if (a[k] < b[k]) return dir === 1 ? -1 : 1;
+                if (a[k] > b[k]) return dir === 1 ? 1 : -1;
+              }
+              return 0;
+            });
+          }
+          return cursor;
+        },
+        skip: (n = 0) => {
+          cursor._items = cursor._items.slice(n);
+          return cursor;
+        },
+        limit: (n = 20) => {
+          cursor._items = cursor._items.slice(0, n);
+          return cursor;
+        },
+        toArray: async () => [...cursor._items]
+      };
+      return cursor;
+    },
+    findOne: async (filter = {}) => {
+      return list.find(item => matchDoc(item, filter)) || null;
+    },
+    insertOne: async (doc) => {
+      const item = { ...doc };
+      if (!item.id && !item._id) item.id = `${name.slice(0, 3)}-${Date.now()}`;
+      list.push(item);
+      return { insertedId: item.id || item._id, acknowledged: true };
+    },
+    insertMany: async (docs = []) => {
+      for (const d of docs) {
+        const item = { ...d };
+        if (!item.id && !item._id) item.id = `${name.slice(0, 3)}-${Date.now()}`;
+        list.push(item);
+      }
+      return { acknowledged: true, insertedCount: docs.length };
+    },
+    updateOne: async (filter, update, options = {}) => {
+      let item = list.find(it => matchDoc(it, filter));
+      if (!item && options.upsert) {
+        item = { ...(update.$setOnInsert || {}), ...(update.$set || {}) };
+        if (!item.id && !item._id) item.id = `${name.slice(0, 3)}-${Date.now()}`;
+        list.push(item);
+        return { matchedCount: 0, upsertedCount: 1, acknowledged: true };
+      }
+      if (item) {
+        applyUpdate(item, update);
+        return { matchedCount: 1, modifiedCount: 1, acknowledged: true };
+      }
+      return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
+    },
+    updateMany: async (filter, update) => {
+      let count = 0;
+      for (const item of list) {
+        if (matchDoc(item, filter)) {
+          applyUpdate(item, update);
+          count++;
+        }
+      }
+      return { matchedCount: count, modifiedCount: count, acknowledged: true };
+    },
+    findOneAndUpdate: async (filter, update, options = {}) => {
+      let item = list.find(it => matchDoc(it, filter));
+      if (!item && options.upsert) {
+        item = { ...(update.$setOnInsert || {}), ...(update.$set || {}) };
+        if (!item.id && !item._id) item.id = `${name.slice(0, 3)}-${Date.now()}`;
+        list.push(item);
+        return { value: item };
+      }
+      if (item) {
+        applyUpdate(item, update);
+        return { value: item };
+      }
+      return { value: null };
+    },
+    countDocuments: async (filter = {}) => {
+      return list.filter(item => matchDoc(item, filter)).length;
+    },
+    deleteMany: async (filter = {}) => {
+      const remaining = list.filter(item => !matchDoc(item, filter));
+      const deleted = list.length - remaining.length;
+      memory[name] = remaining;
+      return { deletedCount: deleted, acknowledged: true };
+    },
+    createIndex: async () => true
+  };
+}
+
+const memoryDb = {
+  collection: (name) => createMemoryCollection(name)
 };
 
 async function testConnection() {
-  if (!pool) {
-    isPgAvailable = false;
+  if (!client) {
+    console.log('Using in-memory TolSeva database (MONGODB_URI not set)');
     return;
   }
-  try {
-    const client = await pool.connect();
-    try {
-      const res = await client.query('SELECT NOW()');
-      isPgAvailable = true;
-      console.log('✅ PostgreSQL connected successfully at:', res.rows[0].now);
-    } finally {
-      client.release();
-    }
-  } catch (err) {
-    isPgAvailable = false;
-    console.warn('⚠️ [PostgreSQL Notice]:', err.message);
-    console.warn('💡 PostgreSQL is not reachable on ' + (process.env.DB_HOST || 'localhost') + ':' + (process.env.DB_PORT || 5432));
-    console.warn('🚀 TolSeva is running with In-Memory Demo Store. All logins and API actions work out-of-the-box!');
-  }
+  await client.connect();
+  database = client.db(mongoDbName);
+  await database.command({ ping: 1 });
+  isMongoAvailable = true;
+  console.log(`MongoDB connected: ${mongoDbName}`);
 }
 
-function handleMockQuery(text, params = []) {
+function memoryQuery(text, params = []) {
   const norm = text.replace(/\s+/g, ' ').trim();
 
-  // 1. Admin login: SELECT * FROM admins WHERE username = $1
+  // ADMINS
+  if (norm.includes('FROM admins WHERE (username = $1 OR phone = $1)') || norm.includes('FROM admins WHERE username = $1 OR phone = $1')) {
+    const val = String(params[0] || '').toLowerCase();
+    return response(memory.admins.filter(item => item.username.toLowerCase() === val || (item.phone && item.phone === params[0])));
+  }
   if (norm.includes('FROM admins WHERE username = $1')) {
-    const user = memStore.admins.find(a => a.username.toLowerCase() === (params[0] || '').toLowerCase());
-    return { rows: user ? [user] : [], rowCount: user ? 1 : 0 };
+    return response(memory.admins.filter(item => item.username.toLowerCase() === String(params[0]).toLowerCase()));
+  }
+  if (norm.includes('UPDATE admins SET otp = $1, otp_expires_at = $2 WHERE id = $3')) {
+    const item = memory.admins.find(a => a.id === params[2]);
+    if (item) { item.otp = params[0]; item.otp_expires_at = params[1]; }
+    return response(item ? [item] : []);
+  }
+  if (norm.includes('UPDATE admins SET password_hash = $1, otp = NULL, otp_expires_at = NULL WHERE id = $2')) {
+    const item = memory.admins.find(a => a.id === params[1]);
+    if (item) { item.password_hash = params[0]; item.otp = null; item.otp_expires_at = null; }
+    return response(item ? [item] : []);
   }
 
-  // 2. Inspector login: SELECT * FROM inspectors WHERE gov_id = $1
+  // INSPECTORS
+  if (norm.includes('FROM inspectors WHERE (gov_id = $1 OR phone = $1)') || norm.includes('FROM inspectors WHERE gov_id = $1 OR phone = $1')) {
+    const val = String(params[0] || '').toUpperCase();
+    return response(memory.inspectors.filter(item => item.gov_id.toUpperCase() === val || (item.phone && item.phone === params[0])));
+  }
   if (norm.includes('FROM inspectors WHERE gov_id = $1')) {
-    const ins = memStore.inspectors.find(i => i.gov_id.toUpperCase() === (params[0] || '').toUpperCase());
-    return { rows: ins ? [ins] : [], rowCount: ins ? 1 : 0 };
+    return response(memory.inspectors.filter(item => item.gov_id.toUpperCase() === String(params[0]).toUpperCase()));
+  }
+  if (norm.includes('FROM inspectors WHERE id = $1')) {
+    return response(memory.inspectors.filter(item => item.id === params[0]));
+  }
+  if (norm.includes('FROM inspectors ORDER BY full_name') || norm.includes('FROM inspectors')) {
+    return response([...memory.inspectors].sort((a, b) => a.full_name.localeCompare(b.full_name)));
+  }
+  if (norm.includes('UPDATE inspectors SET otp = $1, otp_expires_at = $2 WHERE id = $3')) {
+    const item = memory.inspectors.find(i => i.id === params[2]);
+    if (item) { item.otp = params[0]; item.otp_expires_at = params[1]; }
+    return response(item ? [item] : []);
+  }
+  if (norm.includes('UPDATE inspectors SET password_hash = $1, otp = NULL, otp_expires_at = NULL WHERE id = $2')) {
+    const item = memory.inspectors.find(i => i.id === params[1]);
+    if (item) { item.password_hash = params[0]; item.otp = null; item.otp_expires_at = null; }
+    return response(item ? [item] : []);
   }
 
-  // 3. Vendor check: SELECT * FROM vendors WHERE gstin = $1
+  // VENDORS
   if (norm.includes('FROM vendors WHERE gstin = $1')) {
-    const v = memStore.vendors.find(v => v.gstin.toUpperCase() === (params[0] || '').toUpperCase());
-    return { rows: v ? [v] : [], rowCount: v ? 1 : 0 };
+    return response(memory.vendors.filter(item => item.gstin.toUpperCase() === String(params[0]).toUpperCase()));
   }
-
-  // 4. Vendor request-otp upsert
-  if (norm.includes('INSERT INTO vendors (gstin, phone, business_name, owner_name, otp, otp_expires_at)')) {
-    const [gstin, phone, business_name, owner_name, otp, otpExpiry] = params;
-    let v = memStore.vendors.find(item => item.gstin.toUpperCase() === gstin.toUpperCase());
-    if (v) {
-      v.phone = phone;
-      v.otp = otp;
-      v.otp_expires_at = otpExpiry;
-      v.business_name = business_name || v.business_name;
-      v.owner_name = owner_name || v.owner_name;
-    } else {
-      v = {
-        id: 'ven-' + Math.random().toString(36).substring(2, 9),
-        gstin,
-        phone,
-        business_name: business_name || 'Business',
-        owner_name: owner_name || 'Owner',
-        otp,
-        otp_expires_at: otpExpiry,
-        is_verified: false,
-        created_at: new Date()
-      };
-      memStore.vendors.push(v);
-    }
-    return { rows: [v], rowCount: 1 };
+  if (norm.includes('FROM vendors WHERE id = $1')) {
+    return response(memory.vendors.filter(item => item.id === params[0]));
   }
-
-  // 5. Verify OTP: UPDATE vendors SET is_verified = TRUE
+  if (norm.includes('UPDATE vendors SET otp = $1, otp_expires_at = $2')) {
+    const item = memory.vendors.find(v => v.id === params[2]);
+    if (item) { item.otp = params[0]; item.otp_expires_at = params[1]; }
+    return response(item ? [item] : []);
+  }
   if (norm.includes('UPDATE vendors SET is_verified = TRUE')) {
-    const vendorId = params[0];
-    const v = memStore.vendors.find(item => item.id === vendorId);
-    if (v) {
-      v.is_verified = true;
-      v.otp = null;
-      v.otp_expires_at = null;
-    }
-    return { rows: v ? [v] : [], rowCount: v ? 1 : 0 };
+    const item = memory.vendors.find(v => v.id === params[0]);
+    if (item) { item.is_verified = true; item.otp = null; item.otp_expires_at = null; }
+    return response(item ? [item] : []);
+  }
+  if (norm.includes('FROM vendors v') || norm.includes('FROM vendors')) {
+    const list = memory.vendors.map(v => ({
+      ...v,
+      instrument_count: memory.instruments.filter(i => i.vendor_id === v.id).length
+    }));
+    return response(list);
   }
 
-  // 6. Vendor machines
-  if (norm.includes('FROM instruments i WHERE vendor_id = $1')) {
-    const vendorId = params[0];
-    const now = new Date();
-    const rows = memStore.instruments
-      .filter(i => i.vendor_id === vendorId)
-      .map(i => {
-        const expDate = i.expiry_date ? new Date(i.expiry_date) : null;
-        let expiry_status = 'VALID';
-        let days_until_expiry = null;
-        if (expDate) {
-          const diffDays = Math.ceil((expDate - now) / 86400000);
-          days_until_expiry = diffDays;
-          if (diffDays < 0) expiry_status = 'EXPIRED';
-          else if (diffDays <= 30) expiry_status = 'EXPIRING_SOON';
-          else if (diffDays <= 90) expiry_status = 'APPROACHING';
-        }
-        return { ...i, expiry_status, days_until_expiry };
-      });
-    return { rows, rowCount: rows.length };
+  // INSTRUMENTS
+  if (norm.includes('FROM instruments i WHERE vendor_id = $1') || norm.includes('FROM instruments WHERE vendor_id = $1')) {
+    const list = memory.instruments.filter(i => i.vendor_id === params[0]);
+    return response(list);
   }
-
-  // 7. Add machine: INSERT INTO instruments
-  if (norm.includes('INSERT INTO instruments')) {
-    const [vendor_id, make, model, serial_no, instrument_type, capacity, unit, manufacture_year, installation_date, location_description] = params;
-    const existing = memStore.instruments.find(i => i.serial_no.toLowerCase() === serial_no.toLowerCase());
-    if (existing) {
-      const err = new Error('Serial number already registered');
-      err.code = '23505';
-      throw err;
-    }
-    const newInst = {
-      id: 'inst-' + Math.random().toString(36).substring(2, 9),
-      vendor_id,
-      make,
-      model,
-      serial_no,
-      instrument_type,
-      capacity,
-      unit,
-      manufacture_year: parseInt(manufacture_year) || null,
-      installation_date: installation_date || null,
-      location_description: location_description || null,
-      status: 'PENDING',
-      expiry_date: null,
-      created_at: new Date()
-    };
-    memStore.instruments.push(newInst);
-    return { rows: [newInst], rowCount: 1 };
-  }
-
-  // 8. Vendor appointments: SELECT a.*, i.make... WHERE a.vendor_id = $1
-  if (norm.includes('FROM appointments a') && norm.includes('WHERE a.vendor_id = $1')) {
-    const vendorId = params[0];
-    const rows = memStore.appointments
-      .filter(a => a.vendor_id === vendorId)
-      .map(a => {
-        const inst = memStore.instruments.find(i => i.id === a.instrument_id) || {};
-        const ins = memStore.inspectors.find(i => i.id === a.inspector_id) || {};
-        return { ...a, make: inst.make, model: inst.model, serial_no: inst.serial_no, inspector_name: ins.full_name };
-      });
-    return { rows, rowCount: rows.length };
-  }
-
-  // 9. Book appointment: INSERT INTO appointments
-  if (norm.includes('INSERT INTO appointments')) {
-    const [vendor_id, instrument_id, preferred_date, preferred_time, purpose, vendor_notes] = params;
-    const newApp = {
-      id: 'app-' + Math.random().toString(36).substring(2, 9),
-      vendor_id,
-      instrument_id: instrument_id || null,
-      inspector_id: null,
-      preferred_date,
-      preferred_time,
-      purpose,
-      status: 'PENDING',
-      vendor_notes,
-      created_at: new Date()
-    };
-    memStore.appointments.push(newApp);
-    return { rows: [newApp], rowCount: 1 };
-  }
-
-  // 10. Inspector assigned-visits
-  if (norm.includes('FROM appointments a') && norm.includes('WHERE a.inspector_id = $1') && !norm.includes('JOIN instruments i ON a.instrument_id = i.id')) {
-    const inspectorId = params[0];
-    const now = new Date();
-    const rows = memStore.appointments
-      .filter(a => (a.inspector_id === inspectorId || !a.inspector_id) && !['COMPLETED', 'CANCELLED'].includes(a.status))
-      .map(a => {
-        const inst = memStore.instruments.find(i => i.id === a.instrument_id) || {};
-        const ven = memStore.vendors.find(v => v.id === a.vendor_id) || {};
-        const expDate = inst.expiry_date ? new Date(inst.expiry_date) : null;
-        let expiry_status = 'VALID';
-        if (expDate) {
-          const diffDays = Math.ceil((expDate - now) / 86400000);
-          if (diffDays < 0) expiry_status = 'EXPIRED';
-          else if (diffDays <= 30) expiry_status = 'EXPIRING_SOON';
-          else if (diffDays <= 90) expiry_status = 'APPROACHING';
-        }
-        return {
-          ...a,
-          make: inst.make || 'Scale',
-          model: inst.model || 'Standard',
-          serial_no: inst.serial_no || 'N/A',
-          instrument_type: inst.instrument_type || 'Measuring Scale',
-          expiry_date: inst.expiry_date,
-          capacity: inst.capacity,
-          unit: inst.unit,
-          business_name: ven.business_name || 'Registered Business',
-          owner_name: ven.owner_name || 'Owner',
-          vendor_phone: ven.phone || '',
-          address: ven.address || '',
-          expiry_status
-        };
-      });
-    return { rows, rowCount: rows.length };
-  }
-
-  // 10a. Inspector assigned visits with joins and optional expiry filters
-  if (norm.includes('FROM appointments a') && norm.includes('JOIN instruments i ON a.instrument_id = i.id') && norm.includes('JOIN vendors v ON a.vendor_id = v.id')) {
-    const inspectorId = params[0];
-    const now = new Date();
-    const rows = memStore.appointments
-      .filter(a => a.inspector_id === inspectorId && !['COMPLETED', 'CANCELLED'].includes(a.status))
-      .map(a => {
-        const inst = memStore.instruments.find(i => i.id === a.instrument_id);
-        const vendor = memStore.vendors.find(v => v.id === a.vendor_id);
-        if (!inst || !vendor) return null;
-        const expiryDate = inst.expiry_date ? new Date(inst.expiry_date) : null;
-        const daysUntilExpiry = expiryDate ? Math.ceil((expiryDate - now) / 86400000) : null;
-        const expiryStatus = daysUntilExpiry === null ? 'VALID'
-          : daysUntilExpiry < 0 ? 'EXPIRED'
-          : daysUntilExpiry <= 30 ? 'EXPIRING_SOON'
-          : daysUntilExpiry <= 90 ? 'APPROACHING' : 'VALID';
-        return {
-          ...inst,
-          ...a,
-          business_name: vendor.business_name,
-          owner_name: vendor.owner_name,
-          vendor_phone: vendor.phone,
-          address: vendor.address,
-          expiry_status: expiryStatus
-        };
-      })
-      .filter(Boolean)
-      .filter(row => !norm.includes("expiry_date < CURRENT_DATE") || row.expiry_status === 'EXPIRED')
-      .filter(row => !norm.includes('expiry_date BETWEEN CURRENT_DATE') || ['VALID', 'EXPIRING_SOON', 'APPROACHING'].includes(row.expiry_status))
-      .sort((a, b) => String(a.expiry_date || '').localeCompare(String(b.expiry_date || '')) || String(a.preferred_date).localeCompare(String(b.preferred_date)));
-    return { rows, rowCount: rows.length };
-  }
-
-  // 11. Inspector get instrument: SELECT * FROM instruments WHERE id = $1
   if (norm.includes('FROM instruments WHERE id = $1')) {
-    const inst = memStore.instruments.find(i => i.id === params[0]);
-    return { rows: inst ? [inst] : [], rowCount: inst ? 1 : 0 };
+    return response(memory.instruments.filter(i => i.id === params[0]));
+  }
+  if (norm.includes('FROM instruments')) {
+    return response(memory.instruments);
   }
 
-  // 11a. Inspector certificate lookup
-  if (norm.includes('FROM verification_logs vl') && norm.includes('WHERE vl.id = $1 AND vl.inspector_id = $2')) {
-    const log = memStore.verification_logs.find(item => item.id === params[0] && item.inspector_id === params[1]);
-    if (!log) return { rows: [], rowCount: 0 };
-    const instrument = memStore.instruments.find(item => item.id === log.instrument_id) || {};
-    const vendor = memStore.vendors.find(item => item.id === instrument.vendor_id) || {};
-    return {
-      rows: [{ ...log, make: instrument.make, model: instrument.model, serial_no: instrument.serial_no, business_name: vendor.business_name }],
-      rowCount: 1
-    };
+  // APPOINTMENTS
+  if (norm.includes('FROM appointments a') && norm.includes('WHERE a.vendor_id = $1')) {
+    const list = memory.appointments
+      .filter(a => a.vendor_id === params[0])
+      .map(a => {
+        const inst = memory.instruments.find(i => i.id === a.instrument_id) || {};
+        const insp = memory.inspectors.find(i => i.id === a.inspector_id) || {};
+        return { ...a, make: inst.make, model: inst.model, serial_no: inst.serial_no, inspector_name: insp.full_name };
+      })
+      .sort((a, b) => (b.preferred_date || '').localeCompare(a.preferred_date || ''));
+    return response(list);
   }
-
-  // 12. Verification log: INSERT INTO verification_logs
-  if (norm.includes('INSERT INTO verification_logs')) {
-    const [appointment_id, instrument_id, inspector_id, test_result, observations, error_percentage, photo_url, qr_payload, certificate_no, valid_until] = params;
-    const newLog = {
-      id: 'log-' + Math.random().toString(36).substring(2, 9),
-      appointment_id,
-      instrument_id,
-      inspector_id,
-      test_result,
-      observations,
-      error_percentage,
-      photo_url,
-      qr_payload,
-      certificate_no,
-      valid_until,
-      verified_at: new Date()
-    };
-    memStore.verification_logs.push(newLog);
-    return { rows: [newLog], rowCount: 1 };
+  if (norm.includes('WHERE a.inspector_id = $1')) {
+    const list = memory.appointments
+      .filter(a => a.inspector_id === params[0])
+      .map(a => {
+        const inst = memory.instruments.find(i => i.id === a.instrument_id) || {};
+        const vend = memory.vendors.find(v => v.id === a.vendor_id) || {};
+        return { ...a, ...inst, business_name: vend.business_name, vendor_phone: vend.phone, address: vend.address };
+      });
+    return response(list);
   }
-
-  // 13. Update instrument status
-  if (norm.includes('UPDATE instruments') && norm.includes('SET status = $1')) {
-    const [status, expiry_date, id] = params;
-    const inst = memStore.instruments.find(i => i.id === id);
-    if (inst) {
-      inst.status = status;
-      inst.expiry_date = expiry_date;
-      inst.last_verified_at = new Date();
-    }
-    return { rows: inst ? [inst] : [], rowCount: inst ? 1 : 0 };
-  }
-
-  // 14. Update appointment status: UPDATE appointments SET status = 'COMPLETED'
-  if (norm.includes('UPDATE appointments SET status =')) {
-    const id = params[params.length - 1];
-    const app = memStore.appointments.find(a => a.id === id);
-    if (app) {
-      if (norm.includes("status = 'COMPLETED'")) app.status = 'COMPLETED';
-      if (norm.includes("status = 'CONFIRMED'")) {
-        app.status = 'CONFIRMED';
-        app.inspector_id = params[0];
-      }
-    }
-    return { rows: app ? [app] : [], rowCount: app ? 1 : 0 };
-  }
-
-  // 15. Admin dashboard counts
-  if (norm.includes('SELECT COUNT(*) FROM vendors')) {
-    const count = memStore.vendors.filter(v => v.is_verified).length;
-    return { rows: [{ count }], rowCount: 1 };
-  }
-  if (norm.includes('SELECT COUNT(*) FROM instruments')) {
-    if (norm.includes('expiry_date < CURRENT_DATE')) {
-      const now = new Date();
-      const count = memStore.instruments.filter(i => i.expiry_date && new Date(i.expiry_date) < now && i.status === 'ACTIVE').length;
-      return { rows: [{ count }], rowCount: 1 };
-    }
-    return { rows: [{ count: memStore.instruments.length }], rowCount: 1 };
-  }
-  if (norm.includes('SELECT COUNT(*) FROM appointments')) {
-    const count = memStore.appointments.filter(a => a.status === 'PENDING').length;
-    return { rows: [{ count }], rowCount: 1 };
-  }
-  if (norm.includes('SELECT COUNT(*) FROM verification_logs')) {
-    return { rows: [{ count: memStore.verification_logs.length }], rowCount: 1 };
-  }
-
-  // 16. Admin vendors list
-  if (norm.includes('FROM vendors v') && norm.includes('COUNT(i.id) AS instrument_count')) {
-    const rows = memStore.vendors.filter(v => v.is_verified).map(v => {
-      const instCount = memStore.instruments.filter(i => i.vendor_id === v.id).length;
-      return { ...v, instrument_count: instCount };
-    });
-    return { rows, rowCount: rows.length };
-  }
-
-  // 17. Admin inspectors list
-  if (norm.includes('FROM inspectors ORDER BY full_name')) {
-    return { rows: [...memStore.inspectors], rowCount: memStore.inspectors.length };
-  }
-
-  // 18. Admin appointments list
-  if (norm.includes('FROM appointments a') && norm.includes('ORDER BY a.preferred_date DESC')) {
-    const rows = memStore.appointments.map(a => {
-      const v = memStore.vendors.find(ven => ven.id === a.vendor_id) || {};
-      const inst = memStore.instruments.find(i => i.id === a.instrument_id) || {};
-      const ins = memStore.inspectors.find(i => i.id === a.inspector_id) || {};
+  if (norm.includes('FROM appointments a') || norm.includes('FROM appointments')) {
+    const list = memory.appointments.map(a => {
+      const inst = memory.instruments.find(i => i.id === a.instrument_id) || {};
+      const vend = memory.vendors.find(v => v.id === a.vendor_id) || {};
+      const insp = memory.inspectors.find(i => i.id === a.inspector_id) || {};
       return {
         ...a,
-        business_name: v.business_name || 'Business',
-        vendor_phone: v.phone || '',
-        make: inst.make || 'Scale',
-        model: inst.model || 'Standard',
-        serial_no: inst.serial_no || '',
-        inspector_name: ins.full_name || null
+        business_name: vend.business_name,
+        vendor_phone: vend.phone,
+        make: inst.make,
+        model: inst.model,
+        serial_no: inst.serial_no,
+        inspector_name: insp.full_name
       };
     });
-    return { rows, rowCount: rows.length };
+    return response(list);
   }
 
-  return { rows: [], rowCount: 0 };
+  // VERIFICATION LOGS
+  if (norm.includes('FROM verification_logs vl') && norm.includes('WHERE vl.id = $1 AND vl.inspector_id = $2')) {
+    return response(memory.verification_logs.filter(l => l.id === params[0] && l.inspector_id === params[1]));
+  }
+  if (norm.includes('FROM verification_logs WHERE certificate_no = $1') || norm.includes('FROM verification_logs WHERE id = $1')) {
+    return response(memory.verification_logs.filter(l => l.certificate_no === params[0] || l.id === params[0]));
+  }
+  if (norm.includes('FROM verification_logs')) {
+    return response(memory.verification_logs);
+  }
+
+  // COUNTS
+  if (norm.includes('SELECT COUNT(*) FROM vendors')) return response([{ count: memory.vendors.filter(item => item.is_verified).length }]);
+  if (norm.includes('SELECT COUNT(*) FROM instruments')) return response([{ count: memory.instruments.length }]);
+  if (norm.includes('SELECT COUNT(*) FROM appointments')) return response([{ count: memory.appointments.filter(item => item.status === 'PENDING').length }]);
+  if (norm.includes('SELECT COUNT(*) FROM verification_logs')) return response([{ count: memory.verification_logs.length }]);
+
+  return response([]);
+}
+
+async function mongoQuery(text, params = []) {
+  const norm = text.replace(/\s+/g, ' ').trim();
+  const get = name => database.collection(name);
+  const now = new Date();
+
+  // ADMINS
+  if (norm.includes('FROM admins WHERE (username = $1 OR phone = $1)') || norm.includes('FROM admins WHERE username = $1 OR phone = $1')) {
+    const val = params[0];
+    const item = await get('admins').findOne({ $or: [{ username: new RegExp(`^${escapeRegex(val)}$`, 'i') }, { phone: String(val) }] });
+    return response(item ? [item] : []);
+  }
+  if (norm.includes('FROM admins WHERE username = $1')) {
+    return response([await get('admins').findOne({ username: new RegExp(`^${escapeRegex(params[0])}$`, 'i') })].filter(Boolean));
+  }
+  if (norm.includes('UPDATE admins SET otp = $1, otp_expires_at = $2 WHERE id = $3')) {
+    await get('admins').updateOne({ id: params[2] }, { $set: { otp: params[0], otp_expires_at: params[1], updated_at: now } });
+    return response([]);
+  }
+  if (norm.includes('UPDATE admins SET password_hash = $1, otp = NULL, otp_expires_at = NULL WHERE id = $2')) {
+    await get('admins').updateOne({ id: params[1] }, { $set: { password_hash: params[0], otp: null, otp_expires_at: null, updated_at: now } });
+    return response([]);
+  }
+
+  // INSPECTORS
+  if (norm.includes('FROM inspectors WHERE (gov_id = $1 OR phone = $1)') || norm.includes('FROM inspectors WHERE gov_id = $1 OR phone = $1')) {
+    const val = params[0];
+    const item = await get('inspectors').findOne({ $or: [{ gov_id: new RegExp(`^${escapeRegex(val)}$`, 'i') }, { phone: String(val) }] });
+    return response(item ? [item] : []);
+  }
+  if (norm.includes('FROM inspectors WHERE gov_id = $1')) {
+    return response([await get('inspectors').findOne({ gov_id: new RegExp(`^${escapeRegex(params[0])}$`, 'i') })].filter(Boolean));
+  }
+  if (norm.includes('FROM inspectors WHERE id = $1')) {
+    return response([await get('inspectors').findOne({ id: params[0] })].filter(Boolean));
+  }
+  if (norm.includes('UPDATE inspectors SET otp = $1, otp_expires_at = $2 WHERE id = $3')) {
+    await get('inspectors').updateOne({ id: params[2] }, { $set: { otp: params[0], otp_expires_at: params[1], updated_at: now } });
+    return response([]);
+  }
+  if (norm.includes('UPDATE inspectors SET password_hash = $1, otp = NULL, otp_expires_at = NULL WHERE id = $2')) {
+    await get('inspectors').updateOne({ id: params[1] }, { $set: { password_hash: params[0], otp: null, otp_expires_at: null, updated_at: now } });
+    return response([]);
+  }
+  if (norm.includes('FROM inspectors ORDER BY full_name') || norm.includes('FROM inspectors')) {
+    return response(await get('inspectors').find({}).sort({ full_name: 1 }).toArray());
+  }
+
+  // VENDORS
+  if (norm.includes('FROM vendors WHERE gstin = $1')) {
+    return response([await get('vendors').findOne({ gstin: new RegExp(`^${escapeRegex(params[0])}$`, 'i') })].filter(Boolean));
+  }
+  if (norm.includes('FROM vendors WHERE id = $1')) {
+    return response([await get('vendors').findOne({ id: params[0] })].filter(Boolean));
+  }
+  if (norm.includes('UPDATE vendors SET otp = $1, otp_expires_at = $2')) {
+    await get('vendors').updateOne({ id: params[2] }, { $set: { otp: params[0], otp_expires_at: params[1], updated_at: now } });
+    return response([]);
+  }
+  if (norm.includes('UPDATE vendors SET is_verified = TRUE')) {
+    const item = await get('vendors').findOneAndUpdate({ id: params[0] }, { $set: { is_verified: true, otp: null, otp_expires_at: null, updated_at: now } }, { returnDocument: 'after' });
+    return response(item ? [item.value || item] : []);
+  }
+
+  // INSTRUMENTS
+  if (norm.includes('FROM instruments i WHERE vendor_id = $1') || norm.includes('FROM instruments WHERE vendor_id = $1')) {
+    return response(await get('instruments').find({ vendor_id: params[0] }).sort({ expiry_date: 1 }).toArray());
+  }
+  if (norm.includes('FROM instruments WHERE id = $1')) {
+    return response([await get('instruments').findOne({ id: params[0] })].filter(Boolean));
+  }
+  if (norm.includes('FROM instruments')) {
+    return response(await get('instruments').find({}).toArray());
+  }
+
+  // APPOINTMENTS
+  if (norm.includes('FROM appointments a') && norm.includes('WHERE a.vendor_id = $1')) {
+    return response(await get('appointments').find({ vendor_id: params[0] }).sort({ preferred_date: -1 }).toArray());
+  }
+  if (norm.includes('FROM appointments a') || norm.includes('FROM appointments')) {
+    return response(await get('appointments').find({}).sort({ preferred_date: -1 }).toArray());
+  }
+
+  // VERIFICATION LOGS
+  if (norm.includes('FROM verification_logs vl') && norm.includes('WHERE vl.id = $1 AND vl.inspector_id = $2')) {
+    return response([await get('verification_logs').findOne({ id: params[0], inspector_id: params[1] })].filter(Boolean));
+  }
+  if (norm.includes('FROM verification_logs WHERE certificate_no = $1') || norm.includes('FROM verification_logs WHERE id = $1')) {
+    return response([await get('verification_logs').findOne({ $or: [{ certificate_no: params[0] }, { id: params[0] }] })].filter(Boolean));
+  }
+  if (norm.includes('FROM verification_logs')) {
+    return response(await get('verification_logs').find({}).toArray());
+  }
+
+  // COUNTS
+  if (norm.includes('SELECT COUNT(*) FROM vendors')) return response([{ count: await get('vendors').countDocuments({ is_verified: true }) }]);
+  if (norm.includes('SELECT COUNT(*) FROM instruments')) return response([{ count: await get('instruments').countDocuments() }]);
+  if (norm.includes('SELECT COUNT(*) FROM appointments')) return response([{ count: await get('appointments').countDocuments({ status: 'PENDING' }) }]);
+  if (norm.includes('SELECT COUNT(*) FROM verification_logs')) return response([{ count: await get('verification_logs').countDocuments() }]);
+
+  return response([]);
 }
 
 async function query(text, params = []) {
-  if (isPgAvailable && pool) {
-    const start = Date.now();
-    try {
-      const res = await pool.query(text, params);
-      const duration = Date.now() - start;
-      if (process.env.NODE_ENV === 'development') {
-        console.log('SQL [Postgres]:', { text: text.slice(0, 80), duration: `${duration}ms`, rows: res.rowCount });
-      }
-      return res;
-    } catch (err) {
-      console.warn('⚠️ Postgres query failed, using mock fallback:', err.message);
-      return handleMockQuery(text, params);
-    }
-  } else {
-    return handleMockQuery(text, params);
+  if (!isMongoAvailable) return memoryQuery(text, params);
+  try {
+    return await mongoQuery(text, params);
+  } catch (error) {
+    console.warn('MongoDB query failed, using in-memory fallback:', error.message);
+    return memoryQuery(text, params);
   }
 }
 
-module.exports = { pool, query, testConnection, isPgAvailable: () => isPgAvailable };
+function getDb() {
+  if (isMongoAvailable && database) {
+    return database;
+  }
+  return memoryDb;
+}
+
+module.exports = {
+  query,
+  testConnection,
+  getDb,
+  close: () => client?.close(),
+  isMongoAvailable: () => isMongoAvailable,
+  memory
+};

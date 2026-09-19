@@ -110,7 +110,7 @@ export default function VisitListScreen() {
   );
 }
 
-const NAVY = '#003087';
+const NAVY = '#FF9933'; // Saffron
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   inspectorBar: { backgroundColor: NAVY, paddingHorizontal: 16, paddingVertical: 10 },

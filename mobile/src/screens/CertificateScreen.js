@@ -77,8 +77,8 @@ export default function CertificateScreen() {
   );
 }
 
-const NAVY = '#003087';
-const GOLD = '#C8960C';
+const NAVY = '#FF9933'; // Saffron
+const GOLD = '#138808'; // India Green
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   content: { padding: 16, paddingBottom: 40 },

@@ -1,7 +1,7 @@
 const QRCode = require('qrcode');
 
 /**
- * Builds a structured QR payload for a verification certificate
+ * Builds a public URL QR payload for a verification certificate
  * and generates a base64 PNG data URL
  */
 async function buildCertificateQR({
@@ -15,19 +15,11 @@ async function buildCertificateQR({
   verifiedAt,
   validUntil
 }) {
-  const payload = JSON.stringify({
-    issuer: 'Legal Metrology Department, GoI',
-    certNo: certificateNo,
-    instrumentId,
-    serialNo,
-    make,
-    model,
-    inspector: inspectorGovId,
-    result: testResult,
-    verifiedAt,
-    validUntil,
-    verifyUrl: `https://tolseva.gov.in/verify/${certificateNo}`
-  });
+  const publicBaseUrl = process.env.PUBLIC_VERIFY_URL || process.env.APP_URL || 'https://tolseva.gov.in';
+  const cleanBase = publicBaseUrl.replace(/\/+$/, '');
+  
+  // Set qrPayload to a full public URL rather than an arbitrary JSON string
+  const payload = `${cleanBase}/verify/${encodeURIComponent(certificateNo)}`;
 
   const qrDataUrl = await QRCode.toDataURL(payload, {
     errorCorrectionLevel: 'M',
@@ -43,7 +35,7 @@ function generateCertificateNo(inspectorGovId) {
   const year = new Date().getFullYear();
   const month = String(new Date().getMonth() + 1).padStart(2, '0');
   const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `LM/${inspectorGovId}/${year}${month}/${rand}`;
+  return `LM/${inspectorGovId || 'INSP'}/${year}${month}/${rand}`;
 }
 
 module.exports = { buildCertificateQR, generateCertificateNo };

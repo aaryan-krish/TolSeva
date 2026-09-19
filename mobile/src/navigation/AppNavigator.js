@@ -9,7 +9,7 @@ import CertificateScreen from '../screens/CertificateScreen';
 const Stack = createNativeStackNavigator();
 
 const NAV_THEME = {
-  headerStyle: { backgroundColor: '#003087' },
+  headerStyle: { backgroundColor: '#FF9933' },
   headerTintColor: '#FFFFFF',
   headerTitleStyle: { fontWeight: 'bold' }
 };

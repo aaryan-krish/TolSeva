@@ -16,7 +16,7 @@ function StatusBadge({ status }) {
 export default function MachineTable({ machines, loading }) {
   if (loading) return (
     <div className='flex justify-center py-16'>
-      <div className='animate-spin w-8 h-8 border-4 border-navy-900 border-t-transparent rounded-full' />
+      <div className='animate-spin w-8 h-8 border-4 border-saffron-600 border-t-transparent rounded-full' />
     </div>
   )
 

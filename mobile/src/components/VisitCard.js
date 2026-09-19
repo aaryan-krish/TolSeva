@@ -38,7 +38,7 @@ export default function VisitCard({ visit, onVerify }) {
   );
 }
 
-const NAVY = '#003087';
+const NAVY = '#FF9933'; // Saffron
 const styles = StyleSheet.create({
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, elevation: 3, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6 },
   row: { marginBottom: 4 },

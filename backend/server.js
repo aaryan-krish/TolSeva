@@ -8,8 +8,8 @@ async function startServer() {
   try {
     await testConnection();
   } catch (err) {
-    console.warn('\n⚠️ [TolSeva DB Notice]: PostgreSQL connection failed:', err.message);
-    console.warn('💡 Ensure PostgreSQL is running and "tolseva_db" is created using migrations/001_init_schema.sql');
+    console.warn('\n⚠️ [TolSeva DB Notice]: MongoDB connection failed:', err.message);
+    console.warn('💡 Ensure MONGODB_URI is configured with a reachable MongoDB Atlas cluster');
     console.warn('🚀 Starting HTTP server anyway for health checks and API routes...\n');
   }
 

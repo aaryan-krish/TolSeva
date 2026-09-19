@@ -144,7 +144,7 @@ export default function VerifyScreen() {
   );
 }
 
-const NAVY = '#003087';
+const NAVY = '#FF9933'; // Saffron
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   summaryCard: { backgroundColor: NAVY, padding: 16, marginBottom: 8 },

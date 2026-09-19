@@ -14,7 +14,7 @@ function PriorityBadge({ status }) {
 export default function VisitList({ visits, loading, onVerify }) {
   if (loading) return (
     <div className='flex justify-center py-16'>
-      <div className='animate-spin w-8 h-8 border-4 border-navy-900 border-t-transparent rounded-full' />
+      <div className='animate-spin w-8 h-8 border-4 border-saffron-600 border-t-transparent rounded-full' />
     </div>
   )
 
@@ -33,19 +33,19 @@ export default function VisitList({ visits, loading, onVerify }) {
           <div className='flex items-start justify-between gap-4'>
             <div className='flex-1'>
               <div className='flex items-center gap-2 mb-2 flex-wrap'>
-                <span className='font-bold text-navy-900'>{visit.make} {visit.model}</span>
+                <span className='font-bold text-saffron-600'>{visit.make} {visit.model}</span>
                 <PriorityBadge status={visit.expiry_status} />
               </div>
               <p className='text-sm text-gray-600'>S/N: <span className='font-mono'>{visit.serial_no}</span> | Type: {visit.instrument_type}</p>
               <p className='text-sm text-gray-600'>Capacity: {visit.capacity} {visit.unit}</p>
               <div className='mt-3 pt-3 border-t border-gray-100 grid md:grid-cols-2 gap-2 text-sm'>
                 <div className='flex items-center gap-1.5 text-gray-700'>
-                  <MapPin size={14} className='text-navy-600' />
+                  <MapPin size={14} className='text-saffron-600' />
                   <span>{visit.business_name}</span>
                 </div>
                 {visit.vendor_phone && (
                   <div className='flex items-center gap-1.5 text-gray-700'>
-                    <Phone size={14} className='text-navy-600' />
+                    <Phone size={14} className='text-saffron-600' />
                     <span>+91 {visit.vendor_phone}</span>
                   </div>
                 )}

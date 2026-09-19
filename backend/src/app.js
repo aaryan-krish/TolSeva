@@ -3,15 +3,29 @@ const cors = require('cors');
 const app = express();
 
 // Middleware
+// Support Flutter web development (random ports), mobile, and React web frontends
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    if (
+      origin.startsWith('http://localhost:') ||
+      origin.startsWith('http://127.0.0.1:') ||
+      origin === 'https://tolseva.gov.in'
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/public', require('./routes/public'));
 app.use('/api/vendor', require('./routes/vendor'));
 app.use('/api/inspector', require('./routes/inspector'));
 app.use('/api/admin', require('./routes/admin'));
@@ -19,7 +33,12 @@ app.use('/api/bot', require('./routes/bot'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'TolSeva API is running', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    message: 'TolSeva API is running',
+    demo_mode: process.env.DEMO_MODE !== 'false',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // 404

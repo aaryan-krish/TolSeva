@@ -16,7 +16,7 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="relative bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white overflow-hidden">
+      <section className="relative bg-gradient-to-br from-saffron-600 via-saffron-500 to-saffron-500 text-white overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1 tricolor-strip" />
         <div className="max-w-7xl mx-auto px-4 py-20 md:py-28">
           <div className="max-w-3xl">
@@ -24,11 +24,11 @@ export default function HomePage() {
               <span className="inline-block w-3 h-3 rounded-full bg-saffron" />
               <span className="inline-block w-3 h-3 rounded-full bg-white" />
               <span className="inline-block w-3 h-3 rounded-full bg-indiaGreen" />
-              <span className="text-gold-400 text-sm font-semibold ml-1 tracking-wide uppercase">{t('govInitiative')}</span>
+              <span className="text-green-500 text-sm font-semibold ml-1 tracking-wide uppercase">{t('govInitiative')}</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
               {t('heroTitle')}{' '}
-              <span className="text-gold-400">{t('heroHighlight')}</span>
+              <span className="text-green-500">{t('heroHighlight')}</span>
             </h1>
             <p className="text-blue-200 text-lg mt-5 leading-relaxed">
               {t('heroSub')}
@@ -39,14 +39,14 @@ export default function HomePage() {
                   {t('goToDashboard')} <ArrowRight size={18} />
                 </button>
               ) : null}
-              <a href="#about" className="btn-outline border-white text-white hover:bg-white hover:text-navy-900 flex items-center gap-2">
+              <a href="#about" className="btn-outline border-white text-white hover:bg-white hover:text-saffron-600 flex items-center gap-2">
                 {t('learnMore')} <ArrowRight size={18} />
               </a>
             </div>
           </div>
         </div>
         <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5" />
-        <div className="absolute -right-5 top-40 w-48 h-48 rounded-full bg-gold-500/10" />
+        <div className="absolute -right-5 top-40 w-48 h-48 rounded-full bg-green-600/10" />
       </section>
 
       <StatCounter />
@@ -54,20 +54,20 @@ export default function HomePage() {
       <section id="services" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-extrabold text-navy-900">{t('ourServices')}</h2>
+            <h2 className="text-3xl font-extrabold text-saffron-600">{t('ourServices')}</h2>
             <p className="text-gray-600 mt-2">{t('servicesSub')}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: FileCheck, title: t('instrumentReg'), desc: t('instrumentRegDesc'), color: 'bg-navy-900' },
+              { icon: FileCheck, title: t('instrumentReg'), desc: t('instrumentRegDesc'), color: 'bg-saffron-600' },
               { icon: ShieldCheck, title: t('digitalVerify'), desc: t('digitalVerifyDesc'), color: 'bg-indiaGreen' },
-              { icon: Mic, title: t('voiceAssist'), desc: t('voiceAssistDesc'), color: 'bg-gold-500' }
+              { icon: Mic, title: t('voiceAssist'), desc: t('voiceAssistDesc'), color: 'bg-green-600' }
             ].map(({ icon: Icon, title, desc, color }) => (
               <div key={title} className="text-center p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow">
                 <div className={color + " w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-5"}>
                   <Icon size={32} className="text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-navy-900 mb-3">{title}</h3>
+                <h3 className="text-xl font-bold text-saffron-600 mb-3">{title}</h3>
                 <p className="text-gray-600 leading-relaxed">{desc}</p>
               </div>
             ))}
@@ -77,7 +77,7 @@ export default function HomePage() {
 
       <InfoCards />
 
-      <section id="contact" className="py-16 bg-navy-900 text-white">
+      <section id="contact" className="py-16 bg-saffron-600 text-white">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-extrabold mb-4">{t('contactDept')}</h2>
           <p className="text-blue-200 mb-8">Reach out for assistance, complaints, or inquiries</p>
@@ -89,7 +89,7 @@ export default function HomePage() {
             ].map(item => (
               <div key={item.label} className="bg-white/10 rounded-xl p-6">
                 <div className="text-3xl mb-2">{item.icon}</div>
-                <p className="text-gold-400 text-sm font-semibold">{item.label}</p>
+                <p className="text-green-500 text-sm font-semibold">{item.label}</p>
                 <p className="text-white font-medium mt-1">{item.value}</p>
               </div>
             ))}

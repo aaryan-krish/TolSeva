@@ -91,7 +91,7 @@ export default function VoiceChatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className='fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-navy-900 text-white shadow-2xl hover:bg-navy-700 transition-all flex items-center justify-center border-4 border-gold-500 animate-pulse'
+          className='fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full bg-saffron-600 text-white shadow-2xl hover:bg-saffron-500 transition-all flex items-center justify-center border-4 border-green-600 animate-pulse'
           title='Open TolSeva Voice Assistant'
         >
           <MessageCircle size={28} />
@@ -100,9 +100,9 @@ export default function VoiceChatbot() {
 
       {open && (
         <div className='fixed bottom-6 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden' style={{ maxHeight: '520px' }}>
-          <div className='bg-navy-900 px-4 py-3 flex items-center justify-between flex-shrink-0'>
+          <div className='bg-saffron-600 px-4 py-3 flex items-center justify-between flex-shrink-0'>
             <div className='flex items-center gap-2'>
-              <div className='w-8 h-8 rounded-full bg-gold-500 flex items-center justify-center'>
+              <div className='w-8 h-8 rounded-full bg-green-600 flex items-center justify-center'>
                 <Mic size={16} className='text-white' />
               </div>
               <div>
@@ -121,7 +121,7 @@ export default function VoiceChatbot() {
           <div className='flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50'>
             {messages.map((msg, i) => (
               <div key={i} className={'flex ' + (msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                <div className={'max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ' + (msg.role === 'user' ? 'bg-navy-900 text-white rounded-br-sm' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm shadow-sm')}>
+                <div className={'max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ' + (msg.role === 'user' ? 'bg-saffron-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm shadow-sm')}>
                   {msg.text}
                 </div>
               </div>
@@ -130,9 +130,9 @@ export default function VoiceChatbot() {
               <div className='flex justify-start'>
                 <div className='bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm'>
                   <div className='flex gap-1'>
-                    <span className='w-2 h-2 bg-navy-400 rounded-full animate-bounce' style={{ animationDelay: '0ms' }} />
-                    <span className='w-2 h-2 bg-navy-400 rounded-full animate-bounce' style={{ animationDelay: '150ms' }} />
-                    <span className='w-2 h-2 bg-navy-400 rounded-full animate-bounce' style={{ animationDelay: '300ms' }} />
+                    <span className='w-2 h-2 bg-saffron-400 rounded-full animate-bounce' style={{ animationDelay: '0ms' }} />
+                    <span className='w-2 h-2 bg-saffron-400 rounded-full animate-bounce' style={{ animationDelay: '150ms' }} />
+                    <span className='w-2 h-2 bg-saffron-400 rounded-full animate-bounce' style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default function VoiceChatbot() {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
                 placeholder='Type or speak your query...'
-                className='flex-1 text-sm border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-navy-500'
+                className='flex-1 text-sm border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-saffron-400'
                 disabled={loading}
               />
               {supported && (
@@ -158,7 +158,7 @@ export default function VoiceChatbot() {
                   onMouseUp={stopListening}
                   onTouchStart={startListening}
                   onTouchEnd={stopListening}
-                  className={'p-2.5 rounded-full transition-all ' + (listening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-navy-900 hover:text-white')}
+                  className={'p-2.5 rounded-full transition-all ' + (listening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-saffron-600 hover:text-white')}
                   title='Hold to speak'
                 >
                   {listening ? <MicOff size={18} /> : <Mic size={18} />}
@@ -167,7 +167,7 @@ export default function VoiceChatbot() {
               <button
                 onClick={() => sendMessage(input)}
                 disabled={!input.trim() || loading}
-                className='p-2.5 rounded-full bg-navy-900 text-white hover:bg-navy-700 disabled:opacity-40 transition-colors'
+                className='p-2.5 rounded-full bg-saffron-600 text-white hover:bg-saffron-500 disabled:opacity-40 transition-colors'
               >
                 <Send size={18} />
               </button>
