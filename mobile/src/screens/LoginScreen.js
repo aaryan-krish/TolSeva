@@ -96,6 +96,21 @@ export default function LoginScreen() {
     }
   }
 
+  async function handleResendVendorOtp() {
+    setLoading(true);
+    try {
+      const res = await requestVendorOtp({ gstin: gstin.trim().toUpperCase(), phone: phone.trim() });
+      if (res.data?.dev_otp) setVendorOtp(res.data.dev_otp);
+      Alert.alert('OTP Resent', res.data?.dev_otp
+        ? `Simulated SMS OTP: ${res.data.dev_otp}`
+        : 'A new verification code was sent to your registered phone.');
+    } catch (err) {
+      Alert.alert('Resend Failed', err.response?.data?.error || 'Failed to resend OTP.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Quick Demo Autofills
   function fillDemoVendor() {
     setGstin('27AAPFU0939F1ZV');
@@ -327,6 +342,10 @@ export default function LoginScreen() {
                     {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginBtnText}>Verify & Login</Text>}
                   </TouchableOpacity>
 
+                  <TouchableOpacity style={styles.resendBtn} onPress={handleResendVendorOtp} disabled={loading}>
+                    <Text style={styles.resendText}>{loading ? 'Sending new OTP...' : 'Resend OTP'}</Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity style={styles.backLinkBtn} onPress={() => setVendorStep(1)}>
                     <Text style={styles.backLinkText}>← Change GSTIN / Phone</Text>
                   </TouchableOpacity>
@@ -423,6 +442,8 @@ const styles = StyleSheet.create({
   demoFillText: { color: '#c2410c', fontSize: 12, fontWeight: '600' },
   backLinkBtn: { marginTop: 12, alignItems: 'center', paddingVertical: 6 },
   backLinkText: { color: '#666', fontSize: 13 },
+  resendBtn: { marginTop: 10, alignItems: 'center', paddingVertical: 6 },
+  resendText: { color: SAFFRON, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
   helpText: { color: '#888', fontSize: 11, textAlign: 'center', marginTop: 18 },
   footer: { color: '#fff', fontSize: 11, textAlign: 'center', marginTop: 20, opacity: 0.8 },
 

@@ -402,6 +402,14 @@ export default function LoginModal({ onClose }) {
                 <label className="block text-sm font-semibold mb-1">Enter OTP *</label>
                 <input name="otp" value={form.otp} onChange={update} className="input-field text-center text-xl tracking-[0.5em] font-bold" placeholder="000000" maxLength={6} required />
               </div>
+              <button
+                type="button"
+                onClick={handleVendorRequestOtp}
+                disabled={loading}
+                className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-semibold underline disabled:opacity-50"
+              >
+                {loading ? 'Sending new OTP...' : 'Resend OTP'}
+              </button>
               <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Verifying...' : 'Verify & Login'}</button>
             </form>
           )}

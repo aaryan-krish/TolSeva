@@ -1,22 +1,33 @@
 const { MongoClient } = require('mongodb');
 
-const mongoUri = process.env.MONGODB_URI;
-const databaseName = process.env.MONGODB_DB || 'tolseva';
 let client;
 let db;
 
+function getMongoUri() {
+  const rawUri = process.env.MONGODB_URI;
+  if (!rawUri) throw new Error('MONGODB_URI is not configured');
+  return String(rawUri).trim().replace(/^["']|["']$/g, '');
+}
+
+function getDatabaseName() {
+  const rawDb = process.env.MONGODB_DB || 'tolseva';
+  return String(rawDb).trim().replace(/^["']|["']$/g, '');
+}
+
 async function connect() {
   if (db) return db;
+  const mongoUri = getMongoUri();
+  const databaseName = getDatabaseName();
+
   if (!mongoUri || mongoUri.includes('<cluster>')) {
     throw new Error('MONGODB_URI is missing or still contains the <cluster> placeholder');
   }
 
   client = new MongoClient(mongoUri, {
-    tls: true,
-    family: 4,
-    serverSelectionTimeoutMS: 10000,
-    connectTimeoutMS: 10000
+    serverSelectionTimeoutMS: 15000,
+    connectTimeoutMS: 15000
   });
+
   await client.connect();
   db = client.db(databaseName);
   return db;
@@ -25,12 +36,16 @@ async function connect() {
 async function testConnection() {
   const connectedDb = await connect();
   await connectedDb.command({ ping: 1 });
-  console.log(`MongoDB connected successfully: ${connectedDb.databaseName}`);
+  console.log(`✅ MongoDB connected successfully: ${connectedDb.databaseName}`);
   return connectedDb;
 }
 
 function getDb() {
   if (!db) {
+    if (client) {
+      db = client.db(getDatabaseName());
+      return db;
+    }
     throw new Error('MongoDB is not connected. Call testConnection() before using the database.');
   }
   return db;
@@ -99,6 +114,7 @@ async function query(text, params = []) {
 
 module.exports = {
   close,
+  connect,
   getDb,
   isMongoAvailable,
   pool: null,

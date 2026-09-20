@@ -10,7 +10,7 @@ async function startServer() {
     await testConnection();
   } catch (err) {
     console.error('\n❌ [TolSeva Startup Error]: MongoDB connection failed:', err.message);
-    console.error('💡 Configure MONGODB_URI, MONGODB_DB, and Atlas Network Access before starting the service.\n');
+    console.error('💡 Set MONGODB_URI, MONGODB_DB, JWT_SECRET, and Atlas Network Access in Render.\n');
     process.exitCode = 1;
     return;
   }
