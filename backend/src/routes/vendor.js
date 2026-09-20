@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticate = require('../middleware/auth');
 const { query, getDb } = require('../config/db');
 const { findNearestAvailableInspector } = require('../utils/assignment');
+const QRCode = require('qrcode');
 
 const vendorAuth = authenticate(['vendor']);
 
@@ -15,7 +16,7 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr);
 
-    const enriched = machines.map(i => {
+    const enriched = await Promise.all(machines.map(async i => {
       let expiryStatus = 'VALID';
       let daysUntilExpiry = null;
 
@@ -35,12 +36,32 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
         }
       }
 
+      const certificate = await db.collection('verification_logs').findOne(
+        {
+          instrument_id: i.id,
+          is_current: { $ne: false },
+          test_result: { $in: ['PASS', 'CONDITIONAL_PASS'] },
+          certificate_no: { $exists: true, $nin: [null, ''] }
+        },
+        { sort: { verified_at: -1, createdAt: -1 } }
+      );
+      const certificatePayload = certificate?.qr_payload || (certificate?.certificate_no
+        ? `${process.env.PUBLIC_VERIFY_URL || process.env.APP_URL || 'https://tolseva.gov.in'}/verify/${encodeURIComponent(certificate.certificate_no)}`
+        : null);
+
       return {
         ...i,
         expiry_status: expiryStatus,
-        days_until_expiry: daysUntilExpiry
+        days_until_expiry: daysUntilExpiry,
+        certificate: certificate ? {
+          certificate_no: certificate.certificate_no,
+          valid_until: certificate.valid_until || certificate.validUntil,
+          test_result: certificate.test_result,
+          qr_payload: certificatePayload,
+          qr_data_url: certificatePayload ? await QRCode.toDataURL(certificatePayload, { width: 400, margin: 2 }) : null
+        } : null
       };
-    });
+    }));
 
     res.json({ machines: enriched, total: enriched.length });
   } catch (err) {

@@ -46,10 +46,12 @@ router.get('/verify/:certificateId', async (req, res, next) => {
     const validUntilDate = log.valid_until || log.validUntil ? new Date(log.valid_until || log.validUntil) : null;
     let computedStatus = 'VALID';
 
-    if (!validUntilDate || validUntilDate < today) {
-      computedStatus = 'EXPIRED';
+    if (log.is_current === false) {
+      computedStatus = 'SUPERSEDED';
     } else if (String(log.test_result).toUpperCase() === 'FAIL') {
       computedStatus = 'FAILED';
+    } else if (!validUntilDate || validUntilDate < today) {
+      computedStatus = 'EXPIRED';
     }
 
     // Sanitize response: return ONLY public verification data (no personal owner names, phones, OTPs, or full addresses)

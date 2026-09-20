@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { query, getDb } = require('../config/db');
 const { signToken } = require('../utils/jwt');
-const { generateOtp, getOtpExpiry, sendOtp, isDemoMode } = require('../utils/otp');
+const { generateOtp, getOtpExpiry, sendOtp, isDemoMode, isLocalRequest } = require('../utils/otp');
 
 // Helper to normalize phone numbers to last 10 digits
 function normalizePhone(p) {
@@ -49,7 +49,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
     }
 
     // 3. Generate and store OTP (with expiry)
-    const otp = generateOtp();
+    const localDemoOtp = isDemoMode() && isLocalRequest(req);
+    const otp = generateOtp(localDemoOtp);
     const otpExpiry = getOtpExpiry(10);
 
     await db.collection('vendors').updateOne(
@@ -62,7 +63,7 @@ router.post('/vendor/request-otp', async (req, res, next) => {
     );
 
     // 4. Dispatch SMS or log in demo mode
-    await sendOtp(cleanPhone, otp);
+    await sendOtp(cleanPhone, otp, localDemoOtp);
 
     const maskedPhone = cleanPhone.length >= 4
       ? '*'.repeat(cleanPhone.length - 4) + cleanPhone.slice(-4)
@@ -72,7 +73,7 @@ router.post('/vendor/request-otp', async (req, res, next) => {
       message: `OTP sent successfully to registered mobile ending in ${maskedPhone.slice(-4)}`,
       phone_masked: maskedPhone,
       gstin: cleanGstin,
-      ...(isDemoMode() ? { dev_otp: '123456', demo_mode: true } : (process.env.NODE_ENV === 'development' && { dev_otp: otp }))
+      ...(localDemoOtp ? { dev_otp: '123456', demo_mode: true } : {})
     });
   } catch (err) {
     next(err);
@@ -112,7 +113,7 @@ router.post('/vendor/verify-otp', async (req, res, next) => {
     }
 
     // Validate OTP (with DEMO_MODE fixed OTP bypass)
-    const demoActive = isDemoMode();
+    const demoActive = isDemoMode() && isLocalRequest(req);
     const isDemoOtp = demoActive && cleanOtp === '123456';
     const isStoredOtpValid = vendor.otp && String(vendor.otp).trim() === cleanOtp;
 

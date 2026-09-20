@@ -28,6 +28,23 @@ export default function VerifyModal({ visit, onClose, onSuccess }) {
     finally { setLoading(false) }
   }
 
+  if (cert && cert.log?.test_result === 'FAIL') return (
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
+      <div className='bg-white w-full max-w-md rounded-xl shadow-2xl'>
+        <div className='bg-red-700 px-6 py-4 flex items-center justify-between'>
+          <h2 className='text-white font-bold'>Verification Failed</h2>
+          <button onClick={() => { onSuccess(); onClose() }} className='text-white'><X size={20} /></button>
+        </div>
+        <div className='p-6 text-center'>
+          <div className='text-5xl mb-4'>⚠️</div>
+          <p className='text-red-700 font-bold text-lg'>Machine failed inspection</p>
+          <p className='text-sm text-gray-600 mt-2'>No certificate was issued. The instrument has been marked suspended.</p>
+          <button onClick={() => { onSuccess(); onClose() }} className='btn-primary w-full mt-6'>Done</button>
+        </div>
+      </div>
+    </div>
+  )
+
   if (cert) return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'>
       <div className='bg-white w-full max-w-md rounded-xl shadow-2xl'>

@@ -157,7 +157,11 @@ router.get('/vendors/:id', adminAuth, async (req, res, next) => {
 router.get('/inspectors', adminAuth, async (req, res, next) => {
   try {
     const db = getDb();
-    const inspectors = await db.collection('inspectors').find({}).sort({ full_name: 1 }).toArray();
+    const searchGovId = String(req.query.gov_id || '').trim().toUpperCase();
+    const filter = searchGovId
+      ? { gov_id: new RegExp(searchGovId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
+      : {};
+    const inspectors = await db.collection('inspectors').find(filter).sort({ full_name: 1 }).toArray();
     const sanitized = inspectors.map(ins => {
       const { password_hash, otp, otp_expires_at, ...safe } = ins;
       return safe;
@@ -341,6 +345,50 @@ router.get('/expiry-defaulters', adminAuth, async (req, res, next) => {
       total_delinquent_instruments: delinquentInstruments.length,
       as_of_date: todayStr
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/admin/complaints ────────────────────────────────────────────────
+router.post('/complaints', adminAuth, async (req, res, next) => {
+  try {
+    const { targetType, targetId, category, description, evidenceUrl, evidence_url } = req.body;
+    const normalizedType = String(targetType || '').toLowerCase();
+
+    if (!['vendor', 'inspector'].includes(normalizedType) || !targetId || !category || !description) {
+      return res.status(400).json({ error: 'Target type, target ID, category, and description are required' });
+    }
+
+    const db = getDb();
+    const targetCollection = normalizedType === 'vendor' ? 'vendors' : 'inspectors';
+    const target = await db.collection(targetCollection).findOne({
+      $or: [{ id: String(targetId).trim() }, normalizedType === 'vendor'
+        ? { gstin: String(targetId).trim().toUpperCase() }
+        : { gov_id: String(targetId).trim().toUpperCase() }]
+    });
+
+    if (!target) return res.status(404).json({ error: `${normalizedType} was not found` });
+
+    const newComplaint = {
+      id: `cmp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: `ADMIN_AGAINST_${normalizedType.toUpperCase()}`,
+      vendorId: normalizedType === 'vendor' ? target.id : null,
+      inspectorId: normalizedType === 'inspector' ? target.id : null,
+      instrumentId: null,
+      certificateId: null,
+      appointmentId: null,
+      category: String(category).trim(),
+      description: String(description).trim(),
+      evidenceUrl: evidenceUrl || evidence_url || null,
+      status: 'OPEN',
+      adminNotes: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await db.collection('complaints').insertOne(newComplaint);
+    res.status(201).json({ message: 'Complaint created successfully', complaint: newComplaint });
   } catch (err) {
     next(err);
   }

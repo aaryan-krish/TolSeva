@@ -48,11 +48,14 @@ export const getCertificate = (id) => api.get(`/inspector/certificate/${id}`)
 
 // Admin
 export const getAdminDashboard = () => api.get('/admin/dashboard')
-export const getAdminVendors = (page = 1) => api.get('/admin/vendors', { params: { page } })
-export const getAdminInspectors = () => api.get('/admin/inspectors')
+export const getAdminVendors = (page = 1, gstin = '') => api.get('/admin/vendors', { params: { page, gstin } })
+export const getAdminInspectors = (govId = '') => api.get('/admin/inspectors', { params: { gov_id: govId } })
 export const assignInspector = (appointmentId, inspectorId) => api.patch(`/admin/appointments/${appointmentId}/assign`, { inspector_id: inspectorId })
 export const getAdminAppointments = () => api.get('/admin/appointments')
 export const createInspector = (data) => api.post('/admin/inspectors', data)
+export const getAdminComplaints = () => api.get('/admin/complaints')
+export const createAdminComplaint = (data) => api.post('/admin/complaints', data)
+export const updateAdminComplaint = (id, data) => api.patch(`/admin/complaints/${id}`, data)
 
 // Bot
 export const askBot = (query, lang = 'en') => api.post('/bot/assist', { query, lang })

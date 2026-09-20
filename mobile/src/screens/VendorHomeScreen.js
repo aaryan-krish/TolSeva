@@ -263,14 +263,15 @@ export default function VendorHomeScreen() {
 
                 {/* Card Action Buttons */}
                 <View style={styles.btnRow}>
-                  {item.certificate_no ? (
+                  {item.certificate?.certificate_no ? (
                     <TouchableOpacity
                       style={styles.qrBtn}
                       onPress={() => navigation.navigate('Certificate', {
                         cert: {
-                          certificate_no: item.certificate_no,
-                          valid_until: item.expiry_date,
-                          log: { test_result: 'PASS', qr_payload: JSON.stringify({ verifyUrl: `https://tolseva.gov.in/verify/${item.certificate_no}` }) }
+                          certificate_no: item.certificate.certificate_no,
+                          valid_until: item.certificate.valid_until,
+                          qr_data_url: item.certificate.qr_data_url,
+                          log: { test_result: item.certificate.test_result, qr_payload: item.certificate.qr_payload }
                         }
                       })}
                     >

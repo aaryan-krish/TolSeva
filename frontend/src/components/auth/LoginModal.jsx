@@ -58,6 +58,17 @@ export default function LoginModal({ onClose }) {
     setResetForm({ identifier: prefill || '', otp: '', newPassword: '', confirmPassword: '' })
   }
 
+  function fillDemoLogin() {
+    if (role === 'vendor') {
+      setForm(f => ({ ...f, gstin: '27AAPFU0939F1ZV', phone: '9811223344', otp: '123456' }))
+    } else if (role === 'inspector') {
+      setForm(f => ({ ...f, gov_id: 'LMI-MH-001', password: 'Inspector@123' }))
+    } else {
+      setForm(f => ({ ...f, username: 'admin', password: 'Admin@123' }))
+    }
+    setError('')
+  }
+
   async function handleVendorRequestOtp(e) {
     e.preventDefault(); setLoading(true); setError('')
     try {
@@ -358,6 +369,11 @@ export default function LoginModal({ onClose }) {
           {/* ═══════════ REGULAR LOGIN VIEWS ═══════════ */}
           {!isResetting && role === 'vendor' && step === 1 && (
             <form onSubmit={handleVendorRequestOtp} className="space-y-4">
+              {import.meta.env.DEV && (
+                <button type="button" onClick={fillDemoLogin} className="btn-outline w-full text-sm">
+                  Fill demo vendor login
+                </button>
+              )}
               <div>
                 <label className="block text-sm font-semibold mb-1">GSTIN *</label>
                 <input name="gstin" value={form.gstin} onChange={update} className="input-field" placeholder="e.g. 27AAPFU0939F1ZV" maxLength={15} required />
@@ -376,6 +392,11 @@ export default function LoginModal({ onClose }) {
 
           {!isResetting && role === 'vendor' && step === 2 && (
             <form onSubmit={handleVendorVerifyOtp} className="space-y-4">
+              {import.meta.env.DEV && (
+                <button type="button" onClick={fillDemoLogin} className="btn-outline w-full text-sm">
+                  Fill demo OTP
+                </button>
+              )}
               <p className="text-sm text-gray-600">OTP sent to +91{form.phone}. <button type="button" className="text-emerald-600 underline" onClick={() => setStep(1)}>Change</button></p>
               <div>
                 <label className="block text-sm font-semibold mb-1">Enter OTP *</label>
@@ -387,6 +408,11 @@ export default function LoginModal({ onClose }) {
 
           {!isResetting && role === 'inspector' && (
             <form onSubmit={handleInspectorLogin} className="space-y-4">
+              {import.meta.env.DEV && (
+                <button type="button" onClick={fillDemoLogin} className="btn-outline w-full text-sm">
+                  Fill demo inspector login
+                </button>
+              )}
               <div>
                 <label className="block text-sm font-semibold mb-1">Government ID *</label>
                 <input name="gov_id" value={form.gov_id} onChange={update} className="input-field" placeholder="e.g. LMI-MH-001" required />
@@ -415,6 +441,11 @@ export default function LoginModal({ onClose }) {
 
           {!isResetting && role === 'admin' && (
             <form onSubmit={handleAdminLogin} className="space-y-4">
+              {import.meta.env.DEV && (
+                <button type="button" onClick={fillDemoLogin} className="btn-outline w-full text-sm">
+                  Fill demo admin login
+                </button>
+              )}
               <div>
                 <label className="block text-sm font-semibold mb-1">Username *</label>
                 <input name="username" value={form.username} onChange={update} className="input-field" placeholder="admin" required />

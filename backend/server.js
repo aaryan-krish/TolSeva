@@ -9,9 +9,10 @@ async function startServer() {
   try {
     await testConnection();
   } catch (err) {
-    console.warn('\n⚠️ [TolSeva DB Notice]: MongoDB connection failed:', err.message);
-    console.warn('💡 Ensure MONGODB_URI is configured with a reachable MongoDB Atlas cluster');
-    console.warn('🚀 Starting HTTP server anyway for health checks and API routes...\n');
+    console.error('\n❌ [TolSeva Startup Error]: MongoDB connection failed:', err.message);
+    console.error('💡 Configure MONGODB_URI, MONGODB_DB, and Atlas Network Access before starting the service.\n');
+    process.exitCode = 1;
+    return;
   }
 
   app.listen(PORT, () => {

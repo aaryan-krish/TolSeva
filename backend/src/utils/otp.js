@@ -14,8 +14,14 @@ function isDemoMode() {
   return process.env.NODE_ENV !== 'production';
 }
 
-function generateOtp() {
-  if (isDemoMode()) {
+function isLocalRequest(req) {
+  const hostname = String(req?.hostname || '').toLowerCase();
+  return process.env.NODE_ENV !== 'production'
+    && (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1');
+}
+
+function generateOtp(useDemoOtp = isDemoMode()) {
+  if (useDemoOtp) {
     return DEMO_OTP;
   }
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -27,8 +33,8 @@ function getOtpExpiry(minutesFromNow = 10) {
   return expiry;
 }
 
-async function sendOtp(phone, otp) {
-  if (isDemoMode()) {
+async function sendOtp(phone, otp, useDemoOtp = isDemoMode()) {
+  if (useDemoOtp) {
     console.log(`\n📱 [DEMO MODE OTP] To: +91${phone} | OTP: ${otp} (Fixed Demo OTP: ${DEMO_OTP})\n`);
     return true;
   }
@@ -53,6 +59,7 @@ function verifyOtpValue(enteredOtp, storedOtp, expiresAt) {
 module.exports = {
   DEMO_OTP,
   isDemoMode,
+  isLocalRequest,
   generateOtp,
   getOtpExpiry,
   sendOtp,

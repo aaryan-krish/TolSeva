@@ -46,9 +46,9 @@ async function query(text, params = []) {
   const normalized = text.replace(/\s+/g, ' ').trim();
 
   let collectionName;
-  if (normalized.includes('FROM vendors')) collectionName = 'vendors';
-  if (normalized.includes('FROM inspectors')) collectionName = 'inspectors';
-  if (normalized.includes('FROM admins')) collectionName = 'admins';
+  if (normalized.includes('vendors')) collectionName = 'vendors';
+  if (normalized.includes('inspectors')) collectionName = 'inspectors';
+  if (normalized.includes('admins')) collectionName = 'admins';
   if (!collectionName) throw new Error(`Unsupported database query: ${normalized}`);
 
   const collection = database.collection(collectionName);

@@ -1,4 +1,4 @@
-﻿import { AlertTriangle, CheckCircle, Clock, XCircle, Wrench } from 'lucide-react'
+﻿import { AlertTriangle, CheckCircle, Clock, XCircle, Wrench, Download, QrCode } from 'lucide-react'
 
 function ExpiryBadge({ status, daysUntilExpiry }) {
   if (status === 'EXPIRED' || daysUntilExpiry < 0) return <span className='badge-expired'><XCircle size={12} className='mr-1' />Expired</span>
@@ -11,6 +11,17 @@ function ExpiryBadge({ status, daysUntilExpiry }) {
 function StatusBadge({ status }) {
   const map = { ACTIVE: 'badge-valid', PENDING: 'badge-pending', EXPIRED: 'badge-expired', SUSPENDED: 'badge-expired' }
   return <span className={map[status] || 'badge-pending'}>{status}</span>
+}
+
+function downloadCertificate(machine) {
+  const certificate = machine.certificate
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>TolSeva Certificate ${certificate.certificate_no}</title><style>body{font-family:Arial,sans-serif;margin:48px;color:#17202a}main{max-width:720px;margin:auto;border:2px solid #047857;padding:36px}h1{color:#047857;text-align:center}h2{text-align:center;font-weight:normal}dl{display:grid;grid-template-columns:180px 1fr;gap:12px;margin-top:32px}dt{font-weight:bold;color:#64748b}dd{margin:0}footer{margin-top:40px;text-align:center;color:#64748b;font-size:12px}</style></head><body><main><h1>Legal Metrology Certificate</h1><h2>TolSeva Government Verification Portal</h2><dl><dt>Certificate Number</dt><dd>${certificate.certificate_no}</dd><dt>Instrument</dt><dd>${machine.make} ${machine.model}</dd><dt>Serial Number</dt><dd>${machine.serial_no}</dd><dt>Instrument Type</dt><dd>${machine.instrument_type}</dd><dt>Test Result</dt><dd>${certificate.test_result}</dd><dt>Valid Until</dt><dd>${certificate.valid_until || 'Not specified'}</dd></dl><footer>Verify online using the QR code associated with this certificate.</footer></main></body></html>`
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${certificate.certificate_no.replace(/[^a-z0-9_-]/gi, '_')}.html`
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 export default function MachineTable({ machines, loading }) {
@@ -33,7 +44,7 @@ export default function MachineTable({ machines, loading }) {
       <table className='w-full text-sm'>
         <thead>
           <tr className='bg-gray-50 border-b-2 border-gray-200'>
-            {['Make / Model', 'Serial No.', 'Type', 'Capacity', 'Expiry Date', 'Expiry Status', 'Reg. Status'].map(h => (
+            {['Make / Model', 'Serial No.', 'Type', 'Capacity', 'Expiry Date', 'Expiry Status', 'Reg. Status', 'Documents'].map(h => (
               <th key={h} className='px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap'>{h}</th>
             ))}
           </tr>
@@ -56,6 +67,14 @@ export default function MachineTable({ machines, loading }) {
               </td>
               <td className='px-4 py-3'>
                 <StatusBadge status={m.status} />
+              </td>
+              <td className='px-4 py-3'>
+                {m.certificate ? (
+                  <div className='flex items-center gap-2'>
+                    <button type='button' onClick={() => downloadCertificate(m)} className='text-emerald-700 hover:text-emerald-900' title='Download certificate'><Download size={17} /></button>
+                    <a href={m.certificate.qr_data_url} download={`${m.certificate.certificate_no.replace(/[^a-z0-9_-]/gi, '_')}-qr.png`} className='text-blue-700 hover:text-blue-900' title='Download QR code'><QrCode size={17} /></a>
+                  </div>
+                ) : <span className='text-xs text-gray-400'>No certificate</span>}
               </td>
             </tr>
           ))}

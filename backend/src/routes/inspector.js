@@ -79,49 +79,57 @@ router.post('/verify', inspectorAuth, async (req, res, next) => {
     const instrument = await db.collection('instruments').findOne({ id: targetInstId });
     if (!instrument) return res.status(404).json({ error: 'Instrument not found' });
 
-    // Generate certificate number
-    const certNo = generateCertificateNo(req.user.gov_id);
+    const normalizedResult = String(resultStatus).toUpperCase();
+    const certificateIssued = ['PASS', 'CONDITIONAL_PASS'].includes(normalizedResult);
+    // Failed inspections get an internal reference but never receive a public certificate.
+    const certNo = certificateIssued ? generateCertificateNo(req.user.gov_id) : `FAIL-${Date.now()}`;
     const validUntil = new Date();
     validUntil.setMonth(validUntil.getMonth() + (Number(valid_months) || 12));
     const validUntilStr = validUntil.toISOString().split('T')[0];
 
-    // Build QR code with FULL public verification URL
-    const { payload: qrPayload, qrDataUrl } = await buildCertificateQR({
+    const certificate = certificateIssued ? await buildCertificateQR({
       certificateNo: certNo,
       instrumentId: instrument.id,
       serialNo: instrument.serial_no,
       make: instrument.make,
       model: instrument.model,
       inspectorGovId: req.user.gov_id,
-      testResult: resultStatus,
+      testResult: normalizedResult,
       verifiedAt: new Date().toISOString(),
       validUntil: validUntilStr
-    });
+    }) : { payload: null, qrDataUrl: null };
+
+    const verificationId = `log-${Date.now()}`;
+    await db.collection('verification_logs').updateMany(
+      { instrument_id: targetInstId, is_current: { $ne: false } },
+      { $set: { is_current: false, superseded_by: verificationId, updated_at: new Date() } }
+    );
 
     const newLog = {
-      id: `log-${Date.now()}`,
+      id: verificationId,
       appointment_id: targetAppId || null,
       appointmentId: targetAppId || null,
       instrument_id: targetInstId,
       instrumentId: targetInstId,
       inspector_id: req.user.id,
       inspectorId: req.user.id,
-      test_result: resultStatus,
+      test_result: normalizedResult,
       observations: observations || null,
       error_percentage: error_percentage != null ? Number(error_percentage) : null,
       photo_url: photo_url || null,
-      qr_payload: qrPayload, // Full public URL
+      qr_payload: certificate.payload,
       certificate_no: certNo,
       certificateNo: certNo,
-      valid_until: validUntilStr,
-      validUntil: validUntilStr,
+      valid_until: certificateIssued ? validUntilStr : null,
+      validUntil: certificateIssued ? validUntilStr : null,
+      is_current: true,
       verified_at: new Date()
     };
 
     await db.collection('verification_logs').insertOne(newLog);
 
     // Update instrument status and expiry date
-    const newStatus = ['PASS', 'CONDITIONAL_PASS'].includes(resultStatus.toUpperCase()) ? 'ACTIVE' : 'SUSPENDED';
+    const newStatus = certificateIssued ? 'ACTIVE' : 'SUSPENDED';
     await db.collection('instruments').updateOne(
       { id: targetInstId },
       {
@@ -143,12 +151,12 @@ router.post('/verify', inspectorAuth, async (req, res, next) => {
     }
 
     res.status(201).json({
-      message: 'Verification completed successfully',
+      message: certificateIssued ? 'Verification completed and certificate issued' : 'Inspection recorded as failed; no certificate issued',
       log: newLog,
-      certificate_no: certNo,
-      qr_payload: qrPayload,
-      qr_data_url: qrDataUrl,
-      valid_until: validUntilStr
+      certificate_no: certificateIssued ? certNo : null,
+      qr_payload: certificate.payload,
+      qr_data_url: certificate.qrDataUrl,
+      valid_until: certificateIssued ? validUntilStr : null
     });
   } catch (err) {
     next(err);

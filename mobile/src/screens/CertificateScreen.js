@@ -14,11 +14,7 @@ export default function CertificateScreen() {
   }
 
   // Parse QR payload for display
-  let qrData = cert.certificate_no || 'CERT';
-  try {
-    const parsed = JSON.parse(cert.log?.qr_payload || '{}');
-    qrData = parsed.verifyUrl || cert.certificate_no;
-  } catch {}
+  const qrData = cert.log?.qr_payload || cert.certificate_no || 'CERT';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
