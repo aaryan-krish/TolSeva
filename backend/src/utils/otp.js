@@ -38,7 +38,11 @@ async function sendOtp(phone, otp, useDemoOtp = isDemoMode()) {
     console.log(`\n📱 [DEMO MODE OTP] To: +91${phone} | OTP: ${otp} (Fixed Demo OTP: ${DEMO_OTP})\n`);
     return true;
   }
-  console.log(`\n📱 [SIMULATED SMS] To: +91${phone} | OTP: ${otp} | Valid: 10 minutes\n`);
+  if (process.env.OTP_DEBUG === 'true') {
+    console.log(`\n📱 [OTP DEBUG - SIMULATED SMS] To: +91${phone} | OTP: ${otp} | Valid: 10 minutes\n`);
+  } else {
+    console.log(`\n📱 [SIMULATED SMS] OTP generated for phone ending in ${String(phone).slice(-4)} | Valid: 10 minutes\n`);
+  }
   return true;
 }
 
