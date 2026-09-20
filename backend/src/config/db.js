@@ -11,7 +11,12 @@ async function connect() {
     throw new Error('MONGODB_URI is missing or still contains the <cluster> placeholder');
   }
 
-  client = new MongoClient(mongoUri);
+  client = new MongoClient(mongoUri, {
+    tls: true,
+    family: 4,
+    serverSelectionTimeoutMS: 10000,
+    connectTimeoutMS: 10000
+  });
   await client.connect();
   db = client.db(databaseName);
   return db;
