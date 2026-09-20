@@ -73,7 +73,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
       message: `OTP sent successfully to registered mobile ending in ${maskedPhone.slice(-4)}`,
       phone_masked: maskedPhone,
       gstin: cleanGstin,
-      ...(localDemoOtp ? { dev_otp: '123456', demo_mode: true } : {})
+      ...(localDemoOtp ? { dev_otp: '123456', demo_mode: true } : {}),
+      ...(process.env.OTP_DEBUG === 'true' ? { dev_otp: otp, debug_mode: true } : {})
     });
   } catch (err) {
     next(err);
