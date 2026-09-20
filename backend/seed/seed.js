@@ -7,13 +7,13 @@ async function seed() {
   try {
     await testConnection();
   } catch (err) {
-    console.log('Notice: Running seed against in-memory storage (MongoDB Atlas not connected)');
+    throw new Error(`MongoDB seed aborted: ${err.message}`);
   }
 
   const db = getDb();
   console.log('\n🌱 ===================================================');
   console.log('   TolSeva Database Seeding Process Initiated');
-  console.log('   Mode: ' + (isMongoAvailable() ? 'MongoDB Cluster' : 'In-Memory Store'));
+  console.log('   Mode: MongoDB Cluster');
   console.log('=====================================================\n');
 
   // 1. Create Indexes if supported
@@ -25,7 +25,7 @@ async function seed() {
     await db.collection('complaints').createIndex({ status: 1, type: 1 });
     await db.collection('appointments').createIndex({ status: 1, preferred_date: 1 });
   } catch (e) {
-    // In-memory or pre-existing index warning ignore
+    // Existing indexes can be reused.
   }
 
   // 2. Admin User
@@ -376,9 +376,10 @@ async function seed() {
   ];
 
   for (const app of appointments) {
+    const { created_at, ...appointmentData } = app;
     await db.collection('appointments').updateOne(
       { id: app.id },
-      { $set: { ...app, updated_at: new Date() }, $setOnInsert: { created_at: new Date() } },
+      { $set: { ...appointmentData, updated_at: new Date() }, $setOnInsert: { created_at: created_at || new Date() } },
       { upsert: true }
     );
   }
