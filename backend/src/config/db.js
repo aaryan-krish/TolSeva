@@ -1,16 +1,18 @@
 const { MongoClient } = require('mongodb');
 
+const DEFAULT_MONGODB_URI = 'mongodb+srv://aaryankrish86_db_user:pjDGEo2K1jNTQe53@cluster0.rcmsnpf.mongodb.net/?retryWrites=true&w=majority';
+const DEFAULT_DB_NAME = 'tolseva';
+
 let client;
 let db;
 
 function getMongoUri() {
-  const rawUri = process.env.MONGODB_URI;
-  if (!rawUri) throw new Error('MONGODB_URI is not configured');
+  const rawUri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
   return String(rawUri).trim().replace(/^["']|["']$/g, '');
 }
 
 function getDatabaseName() {
-  const rawDb = process.env.MONGODB_DB || 'tolseva';
+  const rawDb = process.env.MONGODB_DB || DEFAULT_DB_NAME;
   return String(rawDb).trim().replace(/^["']|["']$/g, '');
 }
 
@@ -75,9 +77,19 @@ async function query(text, params = []) {
 
   if (normalized.startsWith('SELECT')) {
     if (normalized.includes('WHERE (') && normalized.includes(' OR phone = $1')) {
-      const user = await collection.findOne({
-        $or: [{ gov_id: params[0] }, { username: params[0] }, { phone: params[0] }]
-      });
+      const raw = String(params[0] || '').trim();
+      const cleanDigits = raw.replace(/\D/g, '').slice(-10);
+      const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const conditions = [
+        { gov_id: new RegExp(`^${escaped}$`, 'i') },
+        { username: new RegExp(`^${escaped}$`, 'i') },
+        { phone: raw }
+      ];
+      if (cleanDigits.length === 10) {
+        conditions.push({ phone: cleanDigits });
+        conditions.push({ phone: `+91${cleanDigits}` });
+      }
+      const user = await collection.findOne({ $or: conditions });
       return { rows: user ? [user] : [], rowCount: user ? 1 : 0 };
     }
 

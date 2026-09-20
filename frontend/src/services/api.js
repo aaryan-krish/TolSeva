@@ -13,11 +13,13 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// Handle 401 globally
+// Handle 401 globally (only redirect for expired sessions on protected routes, not auth/login forms)
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const url = err.config?.url || ''
+    const isAuthEndpoint = url.includes('/auth/')
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem('tolseva_token')
       localStorage.removeItem('tolseva_user')
       localStorage.removeItem('tolseva_role')

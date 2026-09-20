@@ -148,7 +148,12 @@ export default function LoginScreen() {
         setResetOtp(res.data.dev_otp);
       }
       setResetStep(2);
-      Alert.alert('OTP Dispatched', `A 6-digit code has been sent to your phone ending in ${res.data.phone_masked?.slice(-4) || '****'}.`);
+      Alert.alert(
+        'OTP Dispatched',
+        res.data.dev_otp
+          ? `Demo OTP is: ${res.data.dev_otp}\n\n(Auto-filled for testing)`
+          : `A 6-digit code has been sent to your phone ending in ${res.data.phone_masked?.slice(-4) || '****'}.`
+      );
     } catch (err) {
       Alert.alert('Request Failed', err.response?.data?.error || 'Failed to send OTP.');
     } finally {

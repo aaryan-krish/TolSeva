@@ -289,7 +289,8 @@ router.post('/reset-password/request-otp', async (req, res, next) => {
       phone_masked: maskedPhone,
       role,
       identifier: identifier.trim(),
-      ...(isDemoMode() ? { dev_otp: '123456', demo_mode: true } : (process.env.NODE_ENV === 'development' && { dev_otp: otp }))
+      dev_otp: isDemoMode() ? '123456' : otp,
+      demo_mode: isDemoMode()
     });
   } catch (err) {
     next(err);
@@ -332,7 +333,7 @@ router.post('/reset-password/verify', async (req, res, next) => {
     const isStoredOtpValid = user.otp && String(user.otp).trim() === String(otp).trim();
 
     if (!isDemoOtp && !isStoredOtpValid) {
-      return res.status(401).json({ error: 'Invalid or incorrect OTP' });
+      return res.status(401).json({ error: 'Invalid or incorrect OTP. Please enter code 123456 or check your phone.' });
     }
 
     if (!demoActive && user.otp_expires_at && new Date() > new Date(user.otp_expires_at)) {

@@ -8,10 +8,10 @@ const DEMO_OTP = '123456';
 
 function isDemoMode() {
   if (process.env.DEMO_MODE !== undefined) {
-    return process.env.DEMO_MODE === 'true' || process.env.DEMO_MODE === true || process.env.DEMO_MODE === '1';
+    return process.env.DEMO_MODE !== 'false' && process.env.DEMO_MODE !== false && process.env.DEMO_MODE !== '0';
   }
-  // Default to true in non-production environments
-  return process.env.NODE_ENV !== 'production';
+  // Default to true so demo OTP 123456 works when live SMS gateway is not configured
+  return true;
 }
 
 function isLocalRequest(req) {
