@@ -172,13 +172,13 @@ export default function LoginModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between">
+        <div className="bg-orange-600 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isResetting && (
               <button
                 type="button"
                 onClick={() => { setIsResetting(false); setError(''); setSuccessMsg('') }}
-                className="text-white hover:text-green-500 p-1 rounded transition-colors mr-1"
+                className="text-white hover:text-orange-200 p-1 rounded transition-colors mr-1"
                 title="Back to Login"
               >
                 <ArrowLeft size={18} />
@@ -189,13 +189,13 @@ export default function LoginModal({ onClose }) {
                 {isResetting ? 'Reset Password' : 'Login to TolSeva'}
               </h2>
               {isResetting && (
-                <span className="text-xs text-green-400 capitalize">
+                <span className="text-xs text-orange-200 capitalize">
                   {role} Account Password Recovery
                 </span>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="text-white hover:text-green-500 transition-colors">
+          <button onClick={onClose} className="text-white hover:text-orange-200 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function LoginModal({ onClose }) {
             <button
               key={key}
               onClick={() => switchRole(key)}
-              className={"flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors " + (role === key ? 'border-b-2 border-emerald-600 text-emerald-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700')}
+              className={"flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors " + (role === key ? 'border-b-2 border-orange-600 text-orange-600 bg-orange-50' : 'text-gray-500 hover:text-gray-700')}
             >
               <Icon size={15} /> {label}
             </button>

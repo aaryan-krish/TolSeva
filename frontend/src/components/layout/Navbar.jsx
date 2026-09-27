@@ -24,7 +24,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b-2 border-green-600 shadow-sm sticky top-0 z-40">
+      <nav className="bg-white border-b-2 border-orange-600 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <Link to="/" className="flex items-center gap-2">
@@ -33,10 +33,10 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-5 lg:gap-6">
-              <Link to="/" className="text-gray-700 hover:text-emerald-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
-              <a href="#about" className="text-gray-700 hover:text-emerald-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
-              <a href="#services" className="text-gray-700 hover:text-emerald-600 font-medium text-sm transition-colors">{t('navServices')}</a>
-              <a href="#contact" className="text-gray-700 hover:text-emerald-600 font-medium text-sm transition-colors">{t('navContact')}</a>
+              <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
+              <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
+              <a href="#services" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navServices')}</a>
+              <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navContact')}</a>
 
               {/* Language Selector in Navbar */}
               <div className="border-l pl-4 border-gray-200">
@@ -45,7 +45,7 @@ export default function Navbar() {
 
               {auth ? (
                 <div className="flex items-center gap-3">
-                  <Link to={dashboardLink} className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-green-700">
+                  <Link to={dashboardLink} className="flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
                     <User size={16} /> {auth.user?.business_name || auth.user?.full_name || auth.user?.username}
                   </Link>
                   <button onClick={handleLogout} className="flex items-center gap-1.5 btn-outline text-sm py-1.5">
