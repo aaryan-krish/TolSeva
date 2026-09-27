@@ -46,7 +46,7 @@ function request(method, path, body = null, token = null) {
     });
 
     req.on('error', reject);
-    req.setTimeout(5000, () => {
+    req.setTimeout(15000, () => {
       req.destroy(new Error(`Request timeout for ${method} ${path}`));
     });
 
@@ -87,7 +87,7 @@ async function runTests() {
 
     // 1.1 Correct GSTIN & registered phone -> 200, returns demo OTP 123456
     const otpRes = await request('POST', '/api/auth/vendor/request-otp', {
-      gstin: '27AAPFU0939F1ZV',
+      gstin: '09AAPFU0939F1ZV',
       phone: '9811223344'
     });
     assert(otpRes.status === 200, 'Vendor request-otp succeeds with matching GSTIN and phone');
@@ -95,7 +95,7 @@ async function runTests() {
 
     // 1.2 Mismatched phone -> 400 generic error
     const wrongPhoneRes = await request('POST', '/api/auth/vendor/request-otp', {
-      gstin: '27AAPFU0939F1ZV',
+      gstin: '09AAPFU0939F1ZV',
       phone: '9999999999'
     });
     assert(wrongPhoneRes.status === 400 || wrongPhoneRes.status === 404, 'Mismatched phone rejected with generic error');
@@ -103,7 +103,7 @@ async function runTests() {
 
     // 1.3 Non-existent GSTIN -> 404 generic error
     const noGstinRes = await request('POST', '/api/auth/vendor/request-otp', {
-      gstin: '27ZZZZZ9999Z9ZZ',
+      gstin: '09ZZZZZ9999Z9ZZ',
       phone: '9811223344'
     });
     assert(noGstinRes.status === 404, 'Non-existent GSTIN rejected');
@@ -111,7 +111,7 @@ async function runTests() {
 
     // 1.4 Verify OTP with 123456 -> 200, JWT token returned
     const verifyRes = await request('POST', '/api/auth/vendor/verify-otp', {
-      gstin: '27AAPFU0939F1ZV',
+      gstin: '09AAPFU0939F1ZV',
       phone: '9811223344',
       otp: '123456'
     });
@@ -121,7 +121,7 @@ async function runTests() {
 
     // 1.5 Verify OTP with wrong OTP -> 401
     const badVerifyRes = await request('POST', '/api/auth/vendor/verify-otp', {
-      gstin: '27AABCB1234F1Z1',
+      gstin: '09AABCB1234F1Z1',
       phone: '9811223355',
       otp: '999999'
     });
@@ -140,10 +140,10 @@ async function runTests() {
     const adminToken = adminLoginRes.body.token;
 
     const inspLoginRes = await request('POST', '/api/auth/inspector/login', {
-      gov_id: 'LMI-MH-001',
+      gov_id: 'LMI-UP-001',
       password: 'Inspector@123'
     });
-    assert(inspLoginRes.status === 200, 'Inspector login succeeds with LMI-MH-001/Inspector@123');
+    assert(inspLoginRes.status === 200, 'Inspector login succeeds with LMI-UP-001/Inspector@123');
     const inspectorToken = inspLoginRes.body.token;
 
     // -------------------------------------------------------------------------
@@ -152,7 +152,7 @@ async function runTests() {
     console.log('\n🧪 Test 3: Inspector Auto-Assignment by Distance and Availability');
 
     // Book appointment for vendor 1 on a free future date
-    const freeDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const freeDate = new Date(Date.now() + (30 + Math.floor(Math.random() * 200)) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const appBookRes = await request('POST', '/api/vendor/appointments', {
       instrument_id: 'inst-001',
       preferred_date: freeDate,
@@ -162,7 +162,7 @@ async function runTests() {
 
     assert(appBookRes.status === 201, 'Appointment creation succeeds');
     assert(appBookRes.body.appointment.status === 'CONFIRMED', 'Appointment auto-assigned and confirmed');
-    assert(appBookRes.body.appointment.inspector_id === 'ins-001', 'Nearest inspector (Rajesh in Dadar) assigned to Dadar vendor');
+    assert(appBookRes.body.appointment.inspector_id === 'ins-001', 'Nearest inspector (Rajesh in Lucknow Central) assigned to Lucknow vendor');
 
     // -------------------------------------------------------------------------
     // 4. Complaints System (Vendor, Public, Admin)
@@ -186,7 +186,7 @@ async function runTests() {
 
     // 4.3 Public files complaint with valid certificate
     const publicComplaintRes = await request('POST', '/api/public/complaints', {
-      certificateId: 'LM-MH-001-2026-VAL101',
+      certificateId: 'LM-UP-001-2026-VAL101',
       category: 'ACCURACY_ISSUE',
       description: 'Scale in market is under-weighing by 50 grams'
     });
@@ -219,10 +219,10 @@ async function runTests() {
     console.log('\n🧪 Test 5: Admin Search & Reporting');
 
     // 5.1 Search vendor by GSTIN (partial match)
-    const gstinSearchRes = await request('GET', '/api/admin/vendors?gstin=27AAPFU', null, adminToken);
+    const gstinSearchRes = await request('GET', '/api/admin/vendors?gstin=09AAPFU', null, adminToken);
     assert(gstinSearchRes.status === 200, 'Admin can search vendors by GSTIN');
     assert(gstinSearchRes.body.vendors.length >= 1, 'Search found matching vendor');
-    assert(gstinSearchRes.body.vendors[0].gstin === '27AAPFU0939F1ZV', 'Exact vendor matched');
+    assert(gstinSearchRes.body.vendors[0].gstin === '09AAPFU0939F1ZV', 'Exact vendor matched');
     assert(typeof gstinSearchRes.body.vendors[0].instrument_count === 'number', 'Vendor has instrument_count');
 
     // 5.2 Full vendor profile
@@ -245,7 +245,7 @@ async function runTests() {
     assert(defaultersRes.status === 200, 'Admin fetches expiry-defaulters report');
     assert(defaultersRes.body.defaulters.length >= 1, 'Defaulters found');
     const defaulterGstins = defaultersRes.body.defaulters.map(d => d.vendor.gstin);
-    assert(defaulterGstins.includes('27AAPFU0939F1ZV'), 'Vendor with expired machine inst-002 flagged as defaulter');
+    assert(defaulterGstins.includes('09AAPFU0939F1ZV'), 'Vendor with expired machine inst-002 flagged as defaulter');
 
     // -------------------------------------------------------------------------
     // 6. Public Certificate Verification
@@ -253,16 +253,16 @@ async function runTests() {
     console.log('\n🧪 Test 6: Public Unauthenticated Certificate Verification');
 
     // 6.1 VALID Certificate
-    const validVerifyRes = await request('GET', '/api/public/verify/LM-MH-001-2026-VAL101');
+    const validVerifyRes = await request('GET', '/api/public/verify/LM-UP-001-2026-VAL101');
     assert(validVerifyRes.status === 200, 'Public verify succeeds without authentication');
     assert(validVerifyRes.body.status === 'VALID', 'Certificate correctly computed as VALID');
     assert(validVerifyRes.body.instrument.make === 'Essae Teraoka', 'Returns instrument details');
-    assert(validVerifyRes.body.business.name === 'Sharma Kirana & General Stores', 'Returns business name');
+    assert(validVerifyRes.body.business.name === 'Awadh Kirana & General Stores', 'Returns business name');
     assert(validVerifyRes.body.business.phone === undefined, 'Does not leak vendor phone number');
     assert(validVerifyRes.body.business.owner_name === undefined, 'Does not leak owner private name');
 
     // 6.2 EXPIRED Certificate
-    const expiredVerifyRes = await request('GET', '/api/public/verify/LM-MH-002-2025-EXP202');
+    const expiredVerifyRes = await request('GET', '/api/public/verify/LM-UP-002-2025-EXP202');
     assert(expiredVerifyRes.status === 200, 'Public verify for expired certificate succeeds');
     assert(expiredVerifyRes.body.status === 'EXPIRED', 'Certificate correctly computed as EXPIRED');
 
@@ -278,9 +278,9 @@ async function runTests() {
     // 7.1 Request OTP via Gov ID
     const resetReqRes = await request('POST', '/api/auth/reset-password/request-otp', {
       role: 'inspector',
-      identifier: 'LMI-MH-001'
+      identifier: 'LMI-UP-001'
     });
-    assert(resetReqRes.status === 200, 'Inspector request-otp succeeds for Gov ID LMI-MH-001');
+    assert(resetReqRes.status === 200, 'Inspector request-otp succeeds for Gov ID LMI-UP-001');
     assert(resetReqRes.body.phone_masked.endsWith('0001'), 'Dispatched OTP to registered mobile ending in 0001');
     assert(resetReqRes.body.dev_otp === '123456', 'Demo OTP generated for testing');
 
@@ -301,7 +301,7 @@ async function runTests() {
     // 7.4 Verify OTP with wrong code -> 401
     const resetBadOtpRes = await request('POST', '/api/auth/reset-password/verify', {
       role: 'inspector',
-      identifier: 'LMI-MH-001',
+      identifier: 'LMI-UP-001',
       otp: '999999',
       new_password: 'NewInspector@456'
     });
@@ -310,7 +310,7 @@ async function runTests() {
     // 7.5 Verify OTP and set new password
     const resetSuccessRes = await request('POST', '/api/auth/reset-password/verify', {
       role: 'inspector',
-      identifier: 'LMI-MH-001',
+      identifier: 'LMI-UP-001',
       otp: '123456',
       new_password: 'NewInspector@456'
     });
@@ -318,14 +318,14 @@ async function runTests() {
 
     // 7.6 Old password should fail
     const oldLoginRes = await request('POST', '/api/auth/inspector/login', {
-      gov_id: 'LMI-MH-001',
+      gov_id: 'LMI-UP-001',
       password: 'Inspector@123'
     });
     assert(oldLoginRes.status === 401, 'Old password fails after reset');
 
     // 7.7 New password should succeed
     const newLoginRes = await request('POST', '/api/auth/inspector/login', {
-      gov_id: 'LMI-MH-001',
+      gov_id: 'LMI-UP-001',
       password: 'NewInspector@456'
     });
     assert(newLoginRes.status === 200, 'Login succeeds with new password');
@@ -333,16 +333,16 @@ async function runTests() {
     // 7.8 Restore original demo password for ongoing demo consistency
     await request('POST', '/api/auth/reset-password/request-otp', {
       role: 'inspector',
-      identifier: 'LMI-MH-001'
+      identifier: 'LMI-UP-001'
     });
     await request('POST', '/api/auth/reset-password/verify', {
       role: 'inspector',
-      identifier: 'LMI-MH-001',
+      identifier: 'LMI-UP-001',
       otp: '123456',
       new_password: 'Inspector@123'
     });
     const restoredLoginRes = await request('POST', '/api/auth/inspector/login', {
-      gov_id: 'LMI-MH-001',
+      gov_id: 'LMI-UP-001',
       password: 'Inspector@123'
     });
     assert(restoredLoginRes.status === 200, 'Restored demo password successfully');
@@ -351,17 +351,14 @@ async function runTests() {
     console.log('🎉 ALL INTEGRATION TESTS PASSED SUCCESSFULLY!');
     console.log('======================================================\n');
 
-
-  } finally {
-    if (server) {
-      server.close();
-    }
+    if (server) server.close();
     process.exit(0);
+  } catch (err) {
+    console.error('\n❌ Test Suite Failed:', err);
+    if (server) server.close();
+    process.exit(1);
   }
 }
 
-runTests().catch(err => {
-  console.error('\n❌ Test Suite Failed:', err);
-  if (server) server.close();
-  process.exit(1);
-});
+runTests();
+

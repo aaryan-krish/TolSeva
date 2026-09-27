@@ -353,7 +353,7 @@ router.get('/expiry-defaulters', adminAuth, async (req, res, next) => {
 // ── POST /api/admin/complaints ────────────────────────────────────────────────
 router.post('/complaints', adminAuth, async (req, res, next) => {
   try {
-    const { targetType, targetId, category, description, evidenceUrl, evidence_url } = req.body;
+    const { targetType, targetId, category, description, evidenceUrl, evidence_url, instrumentId } = req.body;
     const normalizedType = String(targetType || '').toLowerCase();
 
     if (!['vendor', 'inspector'].includes(normalizedType) || !targetId || !category || !description) {
@@ -375,7 +375,7 @@ router.post('/complaints', adminAuth, async (req, res, next) => {
       type: `ADMIN_AGAINST_${normalizedType.toUpperCase()}`,
       vendorId: normalizedType === 'vendor' ? target.id : null,
       inspectorId: normalizedType === 'inspector' ? target.id : null,
-      instrumentId: null,
+      instrumentId: instrumentId || null,
       certificateId: null,
       appointmentId: null,
       category: String(category).trim(),

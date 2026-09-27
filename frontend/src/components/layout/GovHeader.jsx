@@ -18,7 +18,7 @@ export default function GovHeader() {
               <h1 className="text-lg sm:text-2xl font-bold leading-tight mt-0.5">
                 {t('portalTitle')}
               </h1>
-              <p className="text-blue-200 text-xs sm:text-sm mt-0.5">{t('portalSubtitle')}</p>
+              <p className="text-orange-100 text-xs sm:text-sm mt-0.5">{t('portalSubtitle')}</p>
             </div>
           </div>
 
@@ -27,7 +27,7 @@ export default function GovHeader() {
             <div className="hidden lg:flex flex-col items-end text-right">
               <span className="text-orange-200 text-xs font-semibold">{t('helpline')}</span>
               <span className="text-white font-bold text-sm">1800-11-4000</span>
-              <span className="text-blue-200 text-xs">{t('officeHours')}</span>
+              <span className="text-orange-100 text-xs">{t('officeHours')}</span>
             </div>
             <div className="flex flex-col items-end gap-1">
               <span className="text-[11px] font-medium text-orange-200 uppercase tracking-wider hidden sm:block">{t('selectLanguage')}</span>

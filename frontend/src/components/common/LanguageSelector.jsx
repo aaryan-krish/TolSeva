@@ -35,7 +35,7 @@ export default function LanguageSelector({ variant = 'header' }) {
       >
         <Globe size={16} className={isHeader ? 'text-orange-200' : 'text-orange-500'} />
         <span className="font-bold">{currentLangObj.nativeName}</span>
-        <span className={isHeader ? 'text-blue-200 text-xs hidden sm:inline' : 'text-gray-500 text-xs hidden sm:inline'}>
+        <span className={isHeader ? 'text-orange-100 text-xs hidden sm:inline' : 'text-gray-500 text-xs hidden sm:inline'}>
           ({currentLangObj.name})
         </span>
         <ChevronDown size={14} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />

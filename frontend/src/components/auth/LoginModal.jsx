@@ -60,9 +60,9 @@ export default function LoginModal({ onClose }) {
 
   function fillDemoLogin() {
     if (role === 'vendor') {
-      setForm(f => ({ ...f, gstin: '27AAPFU0939F1ZV', phone: '9811223344', otp: '123456' }))
+      setForm(f => ({ ...f, gstin: '09AAPFU0939F1ZV', phone: '9811223344', otp: '123456' }))
     } else if (role === 'inspector') {
-      setForm(f => ({ ...f, gov_id: 'LMI-MH-001', password: 'Inspector@123' }))
+      setForm(f => ({ ...f, gov_id: 'LMI-UP-001', password: 'Inspector@123' }))
     } else {
       setForm(f => ({ ...f, username: 'admin', password: 'Admin@123' }))
     }
@@ -241,7 +241,7 @@ export default function LoginModal({ onClose }) {
                     <p className="font-semibold mb-1 flex items-center gap-1">
                       <KeyRound size={14} /> Password Reset via Registered Mobile
                     </p>
-                    Enter your {role === 'inspector' ? 'Government ID (e.g. LMI-MH-001)' : 'Username (e.g. admin)'} or registered mobile number to receive a 6-digit verification code.
+                    Enter your {role === 'inspector' ? 'Government ID (e.g. LMI-UP-001)' : 'Username (e.g. admin)'} or registered mobile number to receive a 6-digit verification code.
                   </div>
 
                   <div>
@@ -253,7 +253,7 @@ export default function LoginModal({ onClose }) {
                       value={resetForm.identifier}
                       onChange={updateReset}
                       className="input-field"
-                      placeholder={role === 'inspector' ? 'e.g. LMI-MH-001 or 9876500001' : 'e.g. admin or 9876500000'}
+                      placeholder={role === 'inspector' ? 'e.g. LMI-UP-001 or 9876500001' : 'e.g. admin or 9876500000'}
                       required
                     />
                   </div>
@@ -270,7 +270,7 @@ export default function LoginModal({ onClose }) {
                     <button
                       type="button"
                       onClick={() => { setIsResetting(false); setError('') }}
-                      className="text-xs text-emerald-500 hover:text-emerald-600 font-semibold underline"
+                      className="text-xs text-emerald-700 hover:text-emerald-900 font-semibold underline"
                     >
                       ← Back to regular login
                     </button>
@@ -278,8 +278,8 @@ export default function LoginModal({ onClose }) {
                 </form>
               ) : (
                 <form onSubmit={handleVerifyResetPassword} className="space-y-4">
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-emerald-600">
-                    <p className="font-medium">
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-900">
+                    <p className="font-medium text-emerald-800">
                       Verification code dispatched to registered mobile ending in:
                     </p>
                     <p className="font-bold text-sm tracking-wider text-emerald-950 mt-0.5">
@@ -288,7 +288,7 @@ export default function LoginModal({ onClose }) {
                     <button
                       type="button"
                       onClick={() => { setResetStep(1); setError('') }}
-                      className="text-emerald-500 underline mt-1.5 font-semibold text-xs inline-block"
+                      className="text-emerald-700 hover:text-emerald-900 underline mt-1.5 font-semibold text-xs inline-block"
                     >
                       Change ID / Mobile
                     </button>
@@ -356,7 +356,7 @@ export default function LoginModal({ onClose }) {
                     <button
                       type="button"
                       onClick={() => { setIsResetting(false); setResetStep(1); setError('') }}
-                      className="text-xs text-emerald-500 hover:text-emerald-600 font-semibold underline"
+                      className="text-xs text-emerald-700 hover:text-emerald-900 font-semibold underline"
                     >
                       Cancel and back to login
                     </button>
@@ -376,7 +376,7 @@ export default function LoginModal({ onClose }) {
               )}
               <div>
                 <label className="block text-sm font-semibold mb-1">GSTIN *</label>
-                <input name="gstin" value={form.gstin} onChange={update} className="input-field" placeholder="e.g. 27AAPFU0939F1ZV" maxLength={15} required />
+                <input name="gstin" value={form.gstin} onChange={update} className="input-field" placeholder="e.g. 09AAPFU0939F1ZV" maxLength={15} required />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1">Registered Mobile Number *</label>
@@ -423,7 +423,7 @@ export default function LoginModal({ onClose }) {
               )}
               <div>
                 <label className="block text-sm font-semibold mb-1">Government ID *</label>
-                <input name="gov_id" value={form.gov_id} onChange={update} className="input-field" placeholder="e.g. LMI-MH-001" required />
+                <input name="gov_id" value={form.gov_id} onChange={update} className="input-field" placeholder="e.g. LMI-UP-001" required />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -431,7 +431,7 @@ export default function LoginModal({ onClose }) {
                   <button
                     type="button"
                     onClick={startReset}
-                    className="text-xs font-semibold text-emerald-500 hover:text-emerald-600 hover:underline"
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -464,7 +464,7 @@ export default function LoginModal({ onClose }) {
                   <button
                     type="button"
                     onClick={startReset}
-                    className="text-xs font-semibold text-emerald-500 hover:text-emerald-600 hover:underline"
+                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
                   >
                     Forgot Password?
                   </button>

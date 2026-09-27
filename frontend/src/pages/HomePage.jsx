@@ -16,59 +16,66 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="relative bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-500 text-white overflow-hidden">
+      {/* Hero Banner */}
+      <section className="relative bg-gradient-to-br from-orange-700 via-orange-600 to-amber-700 text-white overflow-hidden shadow-inner">
         <div className="absolute top-0 left-0 right-0 h-1 tricolor-strip" />
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28">
+        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 relative z-10">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="inline-block w-3 h-3 rounded-full bg-emerald" />
-              <span className="inline-block w-3 h-3 rounded-full bg-white" />
-              <span className="inline-block w-3 h-3 rounded-full bg-orange-600" />
-              <span className="text-orange-500 text-sm font-semibold ml-1 tracking-wide uppercase">{t('govInitiative')}</span>
+            {/* National Tricolor Badge */}
+            <div className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full border border-white/20">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-400" />
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-white" />
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400" />
+              <span className="text-white text-xs font-semibold tracking-wide uppercase">{t('govInitiative')}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight text-white drop-shadow-sm">
               {t('heroTitle')}{' '}
-              <span className="text-orange-500">{t('heroHighlight')}</span>
+              <span className="inline-block mt-1 sm:mt-0 bg-white text-emerald-800 px-3.5 py-0.5 rounded-lg shadow-md font-black border border-emerald-100">
+                {t('heroHighlight')}
+              </span>
             </h1>
-            <p className="text-blue-200 text-lg mt-5 leading-relaxed">
+            <p className="text-orange-100 text-lg md:text-xl mt-5 leading-relaxed max-w-2xl font-normal">
               {t('heroSub')}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               {dashboardLink ? (
-                <button onClick={() => navigate(dashboardLink)} className="btn-secondary flex items-center gap-2">
+                <button onClick={() => navigate(dashboardLink)} className="btn-secondary flex items-center gap-2 text-base px-6 py-3">
                   {t('goToDashboard')} <ArrowRight size={18} />
                 </button>
               ) : null}
-              <a href="#about" className="btn-outline border-white text-white hover:bg-white hover:text-emerald-600 flex items-center gap-2">
+              <a href="#about" className="btn-outline border-white text-white hover:bg-white hover:text-orange-700 flex items-center gap-2 text-base px-6 py-3 font-semibold transition-colors">
                 {t('learnMore')} <ArrowRight size={18} />
               </a>
             </div>
           </div>
         </div>
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5" />
-        <div className="absolute -right-5 top-40 w-48 h-48 rounded-full bg-orange-600/10" />
+        {/* Subtle decorative elements */}
+        <div className="absolute -right-20 -top-20 w-96 h-96 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+        <div className="absolute right-10 bottom-0 w-80 h-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
       </section>
 
       <StatCounter />
 
+      {/* Services Section */}
       <section id="services" className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-extrabold text-emerald-600">{t('ourServices')}</h2>
-            <p className="text-gray-600 mt-2">{t('servicesSub')}</p>
+          <div className="text-center mb-12">
+            <span className="inline-block bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3">Our Core Offerings</span>
+            <h2 className="text-3xl font-extrabold text-gray-900">{t('ourServices')}</h2>
+            <p className="text-gray-600 mt-2 max-w-2xl mx-auto">{t('servicesSub')}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: FileCheck, title: t('instrumentReg'), desc: t('instrumentRegDesc'), color: 'bg-emerald-600' },
-              { icon: ShieldCheck, title: t('digitalVerify'), desc: t('digitalVerifyDesc'), color: 'bg-orange-600' },
-              { icon: Mic, title: t('voiceAssist'), desc: t('voiceAssistDesc'), color: 'bg-orange-600' }
-            ].map(({ icon: Icon, title, desc, color }) => (
-              <div key={title} className="text-center p-8 rounded-xl border border-gray-200 hover:shadow-lg transition-shadow">
-                <div className={color + " w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-5"}>
-                  <Icon size={32} className="text-white" />
+              { icon: FileCheck, title: t('instrumentReg'), desc: t('instrumentRegDesc'), iconBg: 'bg-orange-100 text-orange-600', borderHover: 'hover:border-orange-500' },
+              { icon: ShieldCheck, title: t('digitalVerify'), desc: t('digitalVerifyDesc'), iconBg: 'bg-emerald-100 text-emerald-700', borderHover: 'hover:border-emerald-500' },
+              { icon: Mic, title: t('voiceAssist'), desc: t('voiceAssistDesc'), iconBg: 'bg-amber-100 text-amber-700', borderHover: 'hover:border-amber-500' }
+            ].map(({ icon: Icon, title, desc, iconBg, borderHover }) => (
+              <div key={title} className={`text-center p-8 rounded-xl border border-gray-200 bg-white hover:shadow-xl transition-all ${borderHover}`}>
+                <div className={`${iconBg} w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-5 shadow-sm`}>
+                  <Icon size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-emerald-600 mb-3">{title}</h3>
-                <p className="text-gray-600 leading-relaxed">{desc}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">{desc}</p>
               </div>
             ))}
           </div>
@@ -77,24 +84,26 @@ export default function HomePage() {
 
       <InfoCards />
 
-      <section id="contact" className="py-16 bg-emerald-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-extrabold mb-4">{t('contactDept')}</h2>
-          <p className="text-blue-200 mb-8">Reach out for assistance, complaints, or inquiries</p>
+      {/* Contact Section */}
+      <section id="contact" className="py-16 bg-emerald-900 text-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
+          <h2 className="text-3xl font-extrabold mb-3 text-white">{t('contactDept')}</h2>
+          <p className="text-emerald-100 mb-8 max-w-xl mx-auto">Reach out for official assistance, grievances, or legal metrology inquiries</p>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
               { label: t('tollFree'), value: '1800-11-4000', icon: '📞' },
               { label: t('email'), value: 'lmd.support@consumeraffairs.gov.in', icon: '📧' },
               { label: t('officeHours'), value: 'Mon–Fri, 10:00 AM – 5:00 PM', icon: '🕙' }
             ].map(item => (
-              <div key={item.label} className="bg-white/10 rounded-xl p-6">
+              <div key={item.label} className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl p-5 sm:p-6 hover:bg-white/15 transition-colors overflow-hidden">
                 <div className="text-3xl mb-2">{item.icon}</div>
-                <p className="text-orange-500 text-sm font-semibold">{item.label}</p>
-                <p className="text-white font-medium mt-1">{item.value}</p>
+                <p className="text-amber-300 text-xs font-semibold uppercase tracking-wider">{item.label}</p>
+                <p className="text-white font-medium mt-1 text-xs sm:text-sm md:text-base break-all" title={item.value}>{item.value}</p>
               </div>
             ))}
           </div>
         </div>
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
       </section>
     </div>
   )

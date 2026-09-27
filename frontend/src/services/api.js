@@ -51,6 +51,7 @@ export const getCertificate = (id) => api.get(`/inspector/certificate/${id}`)
 // Admin
 export const getAdminDashboard = () => api.get('/admin/dashboard')
 export const getAdminVendors = (page = 1, gstin = '') => api.get('/admin/vendors', { params: { page, gstin } })
+export const getAdminVendorDetails = (id) => api.get(`/admin/vendors/${id}`)
 export const getAdminInspectors = (govId = '') => api.get('/admin/inspectors', { params: { gov_id: govId } })
 export const assignInspector = (appointmentId, inspectorId) => api.patch(`/admin/appointments/${appointmentId}/assign`, { inspector_id: inspectorId })
 export const getAdminAppointments = () => api.get('/admin/appointments')

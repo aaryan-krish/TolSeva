@@ -113,12 +113,12 @@ export default function LoginScreen() {
 
   // Quick Demo Autofills
   function fillDemoVendor() {
-    setGstin('27AAPFU0939F1ZV');
+    setGstin('09AAPFU0939F1ZV');
     setPhone('9811223344');
   }
 
   function fillDemoInspector() {
-    setGovId('LMI-MH-001');
+    setGovId('LMI-UP-001');
     setPassword('Inspector@123');
   }
 
@@ -246,7 +246,7 @@ export default function LoginScreen() {
                   <Text style={styles.label}>Government ID or Mobile</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. LMI-MH-001"
+                    placeholder="e.g. LMI-UP-001"
                     value={resetIdentifier}
                     onChangeText={setResetIdentifier}
                     autoCapitalize="none"
@@ -300,7 +300,7 @@ export default function LoginScreen() {
                   <Text style={styles.label}>GSTIN *</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="e.g. 27AAPFU0939F1ZV"
+                    placeholder="e.g. 09AAPFU0939F1ZV"
                     value={gstin}
                     onChangeText={setGstin}
                     autoCapitalize="characters"
@@ -322,7 +322,7 @@ export default function LoginScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.demoFillBtn} onPress={fillDemoVendor}>
-                    <Text style={styles.demoFillText}>⚡ Use Demo Vendor (Sharma Kirana)</Text>
+                    <Text style={styles.demoFillText}>⚡ Use Demo Vendor (Awadh Kirana - UP)</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -366,7 +366,7 @@ export default function LoginScreen() {
               <Text style={styles.label}>Government ID *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. LMI-MH-001"
+                placeholder="e.g. LMI-UP-001"
                 value={govId}
                 onChangeText={setGovId}
                 autoCapitalize="characters"
@@ -399,7 +399,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.demoFillBtn} onPress={fillDemoInspector}>
-                <Text style={styles.demoFillText}>⚡ Use Demo Inspector (Rajesh Singh)</Text>
+                <Text style={styles.demoFillText}>⚡ Use Demo Inspector (Rajesh Singh - UP)</Text>
               </TouchableOpacity>
             </>
           )}

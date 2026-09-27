@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Calendar, RefreshCw, Building2, LogOut, Package } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -38,18 +38,18 @@ export default function VendorDashboard() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      <div className='bg-emerald-600 text-white px-4 py-6'>
+      <div className='bg-emerald-800 text-white px-4 py-6 shadow-sm border-b-2 border-emerald-900'>
         <div className='max-w-7xl mx-auto'>
           <div className='flex items-center justify-between'>
             <div>
               <div className='flex items-center gap-2 mb-1'>
-                <Building2 size={20} className='text-orange-500' />
-                <span className='text-orange-500 text-sm font-semibold'>Vendor Dashboard</span>
+                <Building2 size={20} className='text-amber-300' />
+                <span className='text-amber-300 text-sm font-semibold tracking-wide'>Vendor Dashboard</span>
               </div>
-              <h1 className='text-2xl font-bold'>{auth.user?.business_name}</h1>
-              <p className='text-blue-200 text-sm'>GSTIN: {auth.user?.gstin}</p>
+              <h1 className='text-2xl font-bold tracking-tight'>{auth.user?.business_name}</h1>
+              <p className='text-emerald-100 text-sm'>GSTIN: {auth.user?.gstin}</p>
             </div>
-            <button onClick={() => { logout(); navigate('/') }} className='flex items-center gap-2 text-sm border border-white/30 rounded px-3 py-2 hover:bg-white/10'>
+            <button onClick={() => { logout(); navigate('/') }} className='flex items-center gap-2 text-sm border border-white/30 rounded px-3 py-2 hover:bg-white/10 transition-colors'>
               <LogOut size={16} /> Logout
             </button>
           </div>

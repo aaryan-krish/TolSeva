@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 function Counter({ end, duration = 2000, suffix = '' }) {
   const [count, setCount] = useState(0)
@@ -28,10 +28,10 @@ function Counter({ end, duration = 2000, suffix = '' }) {
 }
 
 const stats = [
-  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-emerald-600' },
-  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-orange-600' },
-  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-emerald-500' },
-  { label: 'Certificates Issued', value: 31500, suffix: '+', icon: '📜', color: 'text-green-700' }
+  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-orange-600' },
+  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-emerald-700' },
+  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-blue-800' },
+  { label: 'Certificates Issued', value: 31500, suffix: '+', icon: '📜', color: 'text-emerald-800' }
 ]
 
 export default function StatCounter() {

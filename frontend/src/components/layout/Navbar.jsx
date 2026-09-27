@@ -27,16 +27,20 @@ export default function Navbar() {
       <nav className="bg-white border-b-2 border-orange-600 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to={auth ? dashboardLink : "/"} className="flex items-center gap-2">
               <img src="/logo.png" alt="TolSeva Logo" className="h-10 object-contain" />
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-5 lg:gap-6">
-              <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
-              <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
-              <a href="#services" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navServices')}</a>
-              <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navContact')}</a>
+              {!auth && (
+                <>
+                  <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
+                  <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
+                  <a href="#services" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navServices')}</a>
+                  <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navContact')}</a>
+                </>
+              )}
 
               {/* Language Selector in Navbar */}
               <div className="border-l pl-4 border-gray-200">
@@ -72,10 +76,14 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {menuOpen && (
           <div className="md:hidden border-t border-gray-200 bg-white px-4 pb-4 space-y-2">
-            <Link to="/" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navHome')}</Link>
-            <a href="#about" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navAbout')}</a>
-            <a href="#services" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navServices')}</a>
-            <a href="#contact" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navContact')}</a>
+            {!auth && (
+              <>
+                <Link to="/" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navHome')}</Link>
+                <a href="#about" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navAbout')}</a>
+                <a href="#services" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navServices')}</a>
+                <a href="#contact" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navContact')}</a>
+              </>
+            )}
             {auth ? (
               <button onClick={handleLogout} className="btn-outline w-full text-sm">{t('logout')}</button>
             ) : (
