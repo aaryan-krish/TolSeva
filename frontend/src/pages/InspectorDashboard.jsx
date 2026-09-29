@@ -155,7 +155,7 @@ export default function InspectorDashboard() {
   // Navigation Items
   const navItems = [
     { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { key: 'all_visits', label: 'All Assigned Visits', icon: ClipboardList, badge: visits.length, badgeCls: 'bg-emerald-100 text-emerald-800' },
+    { key: 'all_visits', label: 'All Assigned Visits', icon: ClipboardList, badge: visits.length, badgeCls: 'bg-[#D2DFFF] text-[#162F6A]' },
     { key: 'expired_visits', label: 'Urgent / Expired', icon: AlertTriangle, badge: expiredVisits.length, badgeCls: 'bg-red-100 text-red-700' },
     { key: 'approaching_visits', label: 'Approaching Expiry', icon: Clock, badge: approachingVisits.length, badgeCls: 'bg-amber-100 text-amber-800' },
     { key: 'history', label: 'Issued Certificates', icon: CheckCircle2, badge: history.length ? history.length : null, badgeCls: 'bg-blue-100 text-blue-700' },
@@ -166,12 +166,12 @@ export default function InspectorDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top Header Banner */}
-      <div className="bg-emerald-800 text-white px-4 py-4 sm:py-5 shadow-sm border-b-2 border-emerald-900 z-10">
+      <div className="bg-[#162F6A] text-white px-4 py-4 sm:py-5 shadow-sm border-b-2 border-[#214AAB] z-10">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-amber-300"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#A3BBF3]"
               title="Toggle Sidebar Menu"
               aria-label="Toggle Sidebar Menu"
             >
@@ -179,11 +179,11 @@ export default function InspectorDashboard() {
             </button>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <Shield size={18} className="text-amber-300" />
-                <span className="text-amber-300 text-xs sm:text-sm font-semibold tracking-wide uppercase">Legal Metrology Officer</span>
+                <Shield size={18} className="text-[#A3BBF3]" />
+                <span className="text-[#A3BBF3] text-xs sm:text-sm font-semibold tracking-wide uppercase">Legal Metrology Officer</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{auth.user?.full_name}</h1>
-              <p className="text-emerald-100 text-xs sm:text-sm">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{auth.user?.full_name}</h1>
+              <p className="text-[#D2DFFF] text-xs sm:text-sm">
                 Gov ID: <span className="font-mono font-semibold">{auth.user?.gov_id}</span> | Zone: <span className="font-medium">{auth.user?.zone || 'General Jurisdiction'}</span>
               </p>
             </div>
@@ -214,13 +214,13 @@ export default function InspectorDashboard() {
                     sidebarCollapsed ? 'justify-center' : 'justify-between px-3'
                   } py-2.5 rounded-lg text-sm font-semibold transition-all ${
                     active
-                      ? 'bg-emerald-50 text-emerald-800 border-l-4 border-emerald-600 shadow-sm'
+                      ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A] shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   title={sidebarCollapsed ? label : ''}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon size={18} className={active ? 'text-emerald-700' : 'text-gray-500'} />
+                    <Icon size={18} className={active ? 'text-[#162F6A]' : 'text-gray-500'} />
                     {!sidebarCollapsed && <span className="truncate">{label}</span>}
                   </div>
                   {!sidebarCollapsed && badge !== null && badge !== undefined && (

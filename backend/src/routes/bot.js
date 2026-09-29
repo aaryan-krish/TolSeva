@@ -6,6 +6,13 @@ try {
 const express = require('express');
 const router = express.Router();
 const { GoogleGenAI } = require('@google/genai');
+const rateLimit = require('express-rate-limit');
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { reply: "Too many requests. Please try again later.", source: "system", timestamp: new Date().toISOString() }
+});
 
 // Candidate Gemini models with auto-fallback to ensure 100% availability
 const GEMINI_MODELS = [
@@ -17,10 +24,13 @@ const GEMINI_MODELS = [
 ];
 
 // System prompt grounding the AI as Chat Wizard
-const BASE_SYSTEM_INSTRUCTION = `You are "Chat Wizard", the intelligent, authoritative, and helpful AI Assistant for TolSeva — the National Legal Metrology Verification & Certification Platform under the Ministry of Consumer Affairs, Food & Public Distribution, Government of India.
+const BASE_SYSTEM_INSTRUCTION = `You are "Chat Wizard", the intelligent and helpful AI Assistant for TolSeva — the National Legal Metrology Verification & Certification Platform under the Ministry of Consumer Affairs, Food & Public Distribution, Government of India.
+
+IMPORTANT DISCLAIMER:
+You must explicitly inform users that your answers are AI-generated and can be wrong. Always advise users to verify any legal statements, penalties, or official procedures against current official Government of India sources before taking action.
 
 Your core mission:
-Provide accurate, courteous, and actionable assistance to vendors, shopkeepers, manufacturers, repairers, legal metrology inspectors, and Indian citizens regarding weights and measures, certification, and the Legal Metrology Act, 2009.
+Provide courteous and actionable assistance to vendors, shopkeepers, manufacturers, repairers, legal metrology inspectors, and Indian citizens regarding weights and measures, certification, and the Legal Metrology Act, 2009.
 
 CORE KNOWLEDGE BASE:
 1. Legal Metrology Act, 2009 & General Rules 2011:
@@ -385,8 +395,17 @@ Could you please rephrase or specify which topic you would like help with?`;
 }
 
 // POST /api/bot/assist
-router.post('/assist', async (req, res) => {
-  const { query: userQuery, lang = 'en', history = [] } = req.body;
+router.post('/assist', apiLimiter, async (req, res) => {
+  let { query: userQuery, lang = 'en', history = [] } = req.body;
+
+  // Enforce size limits to prevent unexpected API usage
+  if (userQuery) userQuery = userQuery.substring(0, 1000);
+  if (Array.isArray(history)) {
+    history = history.map(msg => ({
+      ...msg,
+      text: msg.text ? msg.text.substring(0, 1000) : ''
+    })).slice(-10); // keep max 10 messages
+  }
 
   const targetLang = getLanguageName(lang);
 
@@ -469,13 +488,17 @@ Do NOT respond in English unless the selected language is English or the user ex
       // Try candidate models in order to handle temporary model load/503 spikes seamlessly
       for (const candidateModel of GEMINI_MODELS) {
         try {
+          const config = {
+            systemInstruction
+          };
+          if (candidateModel !== 'gemini-3.8-flash') {
+            config.temperature = 0.7;
+          }
+
           const response = await ai.models.generateContent({
             model: candidateModel,
             contents,
-            config: {
-              systemInstruction,
-              temperature: 0.7,
-            }
+            config
           });
 
           const reply = response.text;
@@ -488,7 +511,12 @@ Do NOT respond in English unless the selected language is English or the user ex
             });
           }
         } catch (modelErr) {
-          console.warn(`Model ${candidateModel} temporarily unavailable (${modelErr.message.substring(0, 100)}), trying next candidate...`);
+          console.warn(`Model ${candidateModel} failed (${modelErr.message.substring(0, 100)}).`);
+          // If error is authentication/authorization or bad request, don't retry other models
+          if (modelErr.status === 401 || modelErr.status === 403 || modelErr.status === 400 || modelErr.status === 404) {
+            console.error(`Fatal API error (${modelErr.status}). Breaking fallback loop.`);
+            break;
+          }
         }
       }
     } catch (err) {

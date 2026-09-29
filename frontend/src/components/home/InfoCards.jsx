@@ -1,12 +1,12 @@
 import { Scale, FileCheck, Calendar, ShieldCheck, BookOpen, Phone } from 'lucide-react'
 
 const cards = [
-  { icon: Scale, title: 'Legal Metrology Act, 2009', desc: 'Regulates weights, measures, and measuring instruments to ensure accuracy, fairness, and consumer protection across India.', color: 'bg-orange-50 text-orange-700', border: 'border-orange-200' },
-  { icon: FileCheck, title: 'Instrument Verification', desc: 'All commercial weighing and measuring instruments must be verified and stamped by authorized Legal Metrology inspectors before use.', color: 'bg-emerald-50 text-emerald-800', border: 'border-emerald-200' },
-  { icon: Calendar, title: 'Annual Renewal', desc: 'Verification certificates expire annually. TolSeva automatically tracks expiry dates and notifies vendors 90 days in advance.', color: 'bg-amber-50 text-amber-800', border: 'border-amber-200' },
-  { icon: ShieldCheck, title: 'Digital Certificates', desc: 'Inspectors issue tamper-proof digital certificates with QR codes that can be verified instantly by authorities and consumers.', color: 'bg-blue-50 text-blue-800', border: 'border-blue-200' },
-  { icon: BookOpen, title: 'Penalties for Non-Compliance', desc: 'Under Section 25, using un-verified instruments can result in fines up to ₹25,000 and/or 1 year imprisonment.', color: 'bg-red-50 text-red-800', border: 'border-red-200' },
-  { icon: Phone, title: 'Chat Wizard & 24×7 Support', desc: 'Chat Wizard AI assistant and toll-free helpline assist vendors and citizens in multiple Indian languages with instant answers, registration, and renewals.', color: 'bg-emerald-50 text-emerald-800', border: 'border-emerald-200' }
+  { icon: Scale, title: 'Legal Metrology Act, 2009', desc: 'Regulates weights, measures, and measuring instruments to ensure accuracy, fairness, and consumer protection across India.', color: 'bg-[#D2DFFF]/40 text-[#162F6A]', border: 'border-[#A3BBF3]/50' },
+  { icon: FileCheck, title: 'Instrument Verification', desc: 'All commercial weighing and measuring instruments must be verified and stamped by authorized Legal Metrology inspectors before use.', color: 'bg-emerald-50 text-[#198754]', border: 'border-emerald-200' },
+  { icon: Calendar, title: 'Annual Renewal', desc: 'Verification certificates expire annually. TolSeva automatically tracks expiry dates and notifies vendors 90 days in advance.', color: 'bg-amber-50 text-amber-900', border: 'border-amber-200' },
+  { icon: ShieldCheck, title: 'Digital Certificates', desc: 'Inspectors issue tamper-proof digital certificates with QR codes that can be verified instantly by authorities and consumers.', color: 'bg-[#D2DFFF]/50 text-[#214AAB]', border: 'border-[#A3BBF3]/60' },
+  { icon: BookOpen, title: 'Penalties for Non-Compliance', desc: 'Under Section 25, using un-verified instruments can result in fines up to ₹25,000 and/or 1 year imprisonment.', color: 'bg-red-50 text-[#DC3545]', border: 'border-red-200' },
+  { icon: Phone, title: 'Chat Wizard & 24×7 Support', desc: 'Chat Wizard AI assistant and toll-free helpline assist vendors and citizens in multiple Indian languages with instant answers, registration, and renewals.', color: 'bg-[#D2DFFF]/40 text-[#162F6A]', border: 'border-[#A3BBF3]/50' }
 ]
 
 export default function InfoCards() {
@@ -14,7 +14,7 @@ export default function InfoCards() {
     <section id='about' className='py-16 bg-gray-50'>
       <div className='max-w-7xl mx-auto px-4'>
         <div className='text-center mb-10'>
-          <span className='inline-block bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3'>About the Platform</span>
+          <span className='inline-block bg-[#D2DFFF] text-[#162F6A] border border-[#A3BBF3] text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3'>About the Platform</span>
           <h2 className='text-3xl font-extrabold text-gray-900'>Legal Metrology at a Glance</h2>
           <p className='text-gray-600 mt-3 max-w-2xl mx-auto'>TolSeva simplifies compliance with the Legal Metrology Act, 2009 for businesses across India.</p>
         </div>

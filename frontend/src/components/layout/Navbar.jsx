@@ -29,7 +29,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b-2 border-orange-600 shadow-sm sticky top-0 z-40">
+      <nav className="bg-white border-b-2 border-[#162F6A] shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
             <Link to={auth ? dashboardLink : "/"} className="flex items-center gap-2">
@@ -40,13 +40,13 @@ export default function Navbar() {
             <div className="hidden md:flex items-center gap-5 lg:gap-6">
               {!auth && (
                 <>
-                  <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
-                  <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
-                  <a href="#services" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navServices')}</a>
-                  <Link to="/track-complaint" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors flex items-center gap-1">
+                  <Link to="/" className="text-gray-700 hover:text-[#162F6A] font-medium text-sm transition-colors">{t('navHome')}</Link>
+                  <a href="#about" className="text-gray-700 hover:text-[#162F6A] font-medium text-sm transition-colors">{t('navAbout')}</a>
+                  <a href="#services" className="text-gray-700 hover:text-[#162F6A] font-medium text-sm transition-colors">{t('navServices')}</a>
+                  <Link to="/track-complaint" className="text-gray-700 hover:text-[#162F6A] font-medium text-sm transition-colors flex items-center gap-1">
                     Track Complaint
                   </Link>
-                  <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navContact')}</a>
+                  <a href="#contact" className="text-gray-700 hover:text-[#162F6A] font-medium text-sm transition-colors">{t('navContact')}</a>
                 </>
               )}
 
@@ -77,7 +77,7 @@ export default function Navbar() {
                 <Link to="/" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navHome')}</Link>
                 <a href="#about" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navAbout')}</a>
                 <a href="#services" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navServices')}</a>
-                <Link to="/track-complaint" className="block py-2 text-orange-600 font-medium" onClick={() => setMenuOpen(false)}>Track Complaint</Link>
+                <Link to="/track-complaint" className="block py-2 text-[#162F6A] font-semibold" onClick={() => setMenuOpen(false)}>Track Complaint</Link>
                 <a href="#contact" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navContact')}</a>
               </>
             )}

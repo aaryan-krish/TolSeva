@@ -39,26 +39,26 @@ export default function VendorDashboard() {
 
   return (
     <div className='min-h-screen bg-gray-50'>
-      <div className='bg-emerald-800 text-white px-4 py-6 shadow-sm border-b-2 border-emerald-900'>
+      <div className='bg-[#162F6A] text-white px-4 py-6 shadow-sm border-b-2 border-[#214AAB]'>
         <div className='max-w-7xl mx-auto'>
           <div className='flex items-center justify-between'>
             <div>
               <div className='flex items-center gap-2 mb-1'>
-                <Building2 size={20} className='text-amber-300' />
-                <span className='text-amber-300 text-sm font-semibold tracking-wide'>Vendor Dashboard</span>
+                <Building2 size={20} className='text-[#A3BBF3]' />
+                <span className='text-[#A3BBF3] text-sm font-semibold tracking-wide'>Vendor Dashboard</span>
               </div>
-              <h1 className='text-2xl font-bold tracking-tight'>{auth.user?.business_name}</h1>
-              <p className='text-emerald-100 text-sm'>GSTIN: {auth.user?.gstin}</p>
+              <h1 className='text-2xl font-bold tracking-tight text-white'>{auth.user?.business_name}</h1>
+              <p className='text-[#D2DFFF] text-sm'>GSTIN: {auth.user?.gstin}</p>
             </div>
             <ProfileMenu variant="banner" />
           </div>
           {expired > 0 && (
-            <div className='mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold'>
+            <div className='mt-4 bg-[#DC3545] text-white px-4 py-2 rounded-lg text-sm font-semibold'>
               ⚠️ {expired} instrument(s) have expired certificates. Book a renewal appointment immediately.
             </div>
           )}
           {expiringSoon > 0 && expired === 0 && (
-            <div className='mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold'>
+            <div className='mt-4 bg-[#FFC107] text-[#150202] px-4 py-2 rounded-lg text-sm font-semibold'>
               🔔 {expiringSoon} instrument(s) expiring within 30 days. Schedule renewal soon.
             </div>
           )}
@@ -68,7 +68,7 @@ export default function VendorDashboard() {
       <div className='max-w-7xl mx-auto px-4 py-6'>
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6'>
           {[
-            { label: 'Total Instruments', value: machines.length, icon: '⚖️', color: 'border-emerald-200 bg-emerald-50' },
+            { label: 'Total Instruments', value: machines.length, icon: '⚖️', color: 'border-[#A3BBF3]/60 bg-[#D2DFFF]/20' },
             { label: 'Active', value: machines.filter(m => m.status === 'ACTIVE').length, icon: '✅', color: 'border-green-200 bg-green-50' },
             { label: 'Expired', value: expired, icon: '❌', color: 'border-red-200 bg-red-50' },
             { label: 'Appointments', value: appointments.length, icon: '📅', color: 'border-amber-200 bg-amber-50' }
@@ -84,7 +84,7 @@ export default function VendorDashboard() {
         <div className='flex gap-1 mb-4 bg-gray-200 rounded-lg p-1 w-fit'>
           {[{ key: 'machines', label: 'My Instruments', icon: Package }, { key: 'appointments', label: 'Appointments', icon: Calendar }].map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setActiveTab(key)}
-              className={'flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold transition-colors ' + (activeTab === key ? 'bg-white text-emerald-600 shadow' : 'text-gray-600 hover:text-gray-900')}>
+              className={'flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold transition-colors ' + (activeTab === key ? 'bg-white text-[#162F6A] shadow' : 'text-gray-600 hover:text-gray-900')}>
               <Icon size={15} /> {label}
             </button>
           ))}
@@ -93,7 +93,7 @@ export default function VendorDashboard() {
         {activeTab === 'machines' && (
           <div className='card'>
             <div className='flex items-center justify-between mb-4'>
-              <h2 className='font-bold text-lg text-emerald-600'>Instrument Inventory</h2>
+              <h2 className='font-bold text-lg text-[#162F6A]'>Instrument Inventory</h2>
               <div className='flex gap-2'>
                 <button onClick={fetchMachines} className='btn-outline text-sm py-1.5 flex items-center gap-1'><RefreshCw size={14} /> Refresh</button>
                 <button onClick={() => setShowAddMachine(true)} className='btn-primary text-sm py-1.5 flex items-center gap-1'><Plus size={14} /> Add Machine</button>
@@ -107,7 +107,7 @@ export default function VendorDashboard() {
         {activeTab === 'appointments' && (
           <div className='card'>
             <div className='flex items-center justify-between mb-4'>
-              <h2 className='font-bold text-lg text-emerald-600'>My Appointments</h2>
+              <h2 className='font-bold text-lg text-[#162F6A]'>My Appointments</h2>
               <button onClick={() => setShowAppointment(true)} className='btn-primary text-sm py-1.5 flex items-center gap-1'><Calendar size={14} /> Book New</button>
             </div>
             {appointments.length === 0 ? (

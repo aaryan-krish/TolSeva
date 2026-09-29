@@ -51,7 +51,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
   const isBanner = variant === 'banner'
   const buttonClasses = isBanner
     ? 'flex items-center gap-2 text-sm font-medium border border-white/30 rounded-lg px-3 py-2 bg-white/5 hover:bg-white/15 text-white transition-colors cursor-pointer shadow-xs'
-    : 'flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-orange-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors cursor-pointer shadow-2xs'
+    : 'flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-[#162F6A] bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors cursor-pointer shadow-2xs'
 
   return (
     <>
@@ -65,7 +65,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
           aria-haspopup="true"
         >
           <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-            isBanner ? 'bg-amber-400 text-emerald-950' : 'bg-orange-100 text-orange-700'
+            isBanner ? 'bg-[#A3BBF3] text-[#162F6A]' : 'bg-[#D2DFFF] text-[#162F6A]'
           }`}>
             <User size={15} />
           </div>
@@ -73,7 +73,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
           <ChevronDown
             size={15}
             className={`transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''} ${
-              isBanner ? 'text-emerald-200' : 'text-gray-400'
+              isBanner ? 'text-[#D2DFFF]' : 'text-gray-400'
             }`}
           />
         </button>
@@ -84,7 +84,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
             {/* Header: User Summary */}
             <div className="px-4 py-3 bg-gray-50/70">
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-bold bg-[#D2DFFF] text-[#162F6A] border border-[#A3BBF3]">
                   <RoleIcon size={11} /> {roleLabel}
                 </span>
               </div>
@@ -102,7 +102,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
                   setMenuOpen(false)
                   setShowProfile(true)
                 }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left font-medium cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#D2DFFF]/30 hover:text-[#162F6A] transition-colors text-left font-medium cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
                   <User size={15} />
@@ -119,7 +119,7 @@ export default function ProfileMenu({ variant = 'navbar' }) {
                   setMenuOpen(false)
                   setShowChangePassword(true)
                 }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors text-left font-medium cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-[#D2DFFF]/30 hover:text-[#162F6A] transition-colors text-left font-medium cursor-pointer"
               >
                 <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
                   <KeyRound size={15} />

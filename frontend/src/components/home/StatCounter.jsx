@@ -28,10 +28,10 @@ function Counter({ end, duration = 2000, suffix = '' }) {
 }
 
 const stats = [
-  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-orange-600' },
-  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-emerald-700' },
-  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-blue-800' },
-  { label: 'Certificates Issued', value: 31500, suffix: '+', icon: '📜', color: 'text-emerald-800' }
+  { label: 'Registered Businesses', value: 14820, suffix: '+', icon: '🏪', color: 'text-[#162F6A]' },
+  { label: 'Instruments Verified', value: 52300, suffix: '+', icon: '⚖️', color: 'text-[#214AAB]' },
+  { label: 'Citizens & Vendors Helped', value: 28940, suffix: '+', icon: '👥', color: 'text-[#5279D7]' },
+  { label: 'Certificates Issued', value: 31500, suffix: '+', icon: '📜', color: 'text-[#162F6A]' }
 ]
 
 export default function StatCounter() {

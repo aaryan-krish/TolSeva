@@ -76,13 +76,13 @@ export default function TrackComplaintPage() {
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
       {/* Top Banner */}
-      <section className="bg-gradient-to-br from-emerald-900 via-slate-900 to-slate-950 text-white relative overflow-hidden py-12 px-4 shadow-sm border-b-4 border-orange-600">
+      <section className="bg-gradient-to-br from-[#162F6A] via-[#1A387E] to-[#214AAB] text-white relative overflow-hidden py-12 px-4 shadow-sm border-b-4 border-[#5279D7]">
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex items-center gap-2 mb-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#A3BBF3]" />
             <span className="w-2.5 h-2.5 rounded-full bg-white" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-            <span className="text-emerald-300 text-xs font-semibold tracking-wider uppercase">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#5279D7]" />
+            <span className="text-[#D2DFFF] text-xs font-semibold tracking-wider uppercase">
               Legal Metrology Department • Citizen Grievance Redressal
             </span>
           </div>
@@ -90,7 +90,7 @@ export default function TrackComplaintPage() {
           <h1 className="text-3xl md:text-4xl font-extrabold text-white">
             Track Citizen Complaint Status
           </h1>
-          <p className="text-slate-300 text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
+          <p className="text-[#D2DFFF] text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
             Monitor real-time investigation progress, field audit results, and official actions taken by the Legal Metrology Department against reported measurement inaccuracies.
           </p>
 

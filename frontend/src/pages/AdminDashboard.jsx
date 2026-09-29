@@ -169,19 +169,19 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-emerald-800 text-white px-4 py-6 shadow-sm border-b-2 border-emerald-900 z-10">
+      <div className="bg-[#162F6A] text-white px-4 py-6 shadow-sm border-b-2 border-[#214AAB] z-10">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="p-2 hover:bg-white/10 rounded transition-colors" title="Toggle Sidebar">
+            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="p-2 hover:bg-white/10 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#A3BBF3]" title="Toggle Sidebar">
               <span className="text-xl">☰</span>
             </button>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Crown size={18} className="text-amber-300" />
-                <span className="text-amber-300 text-sm font-semibold tracking-wide">Admin Dashboard</span>
+                <Crown size={18} className="text-[#A3BBF3]" />
+                <span className="text-[#A3BBF3] text-sm font-semibold tracking-wide">Admin Dashboard</span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight">System Administration</h1>
-              <p className="text-emerald-100 text-sm">TolSeva National Control Panel</p>
+              <h1 className="text-2xl font-bold tracking-tight text-white">System Administration</h1>
+              <p className="text-[#D2DFFF] text-sm">TolSeva National Control Panel</p>
             </div>
           </div>
           <ProfileMenu variant="banner" />
@@ -192,16 +192,16 @@ export default function AdminDashboard() {
         {/* Fixed Vertical Sidebar */}
         <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-white border-r border-gray-200 shadow-sm flex-shrink-0 transition-all duration-300 overflow-y-auto overflow-x-hidden`}>
           <nav className="p-4 space-y-1.5">
-            <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'overview' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Overview" : ""}>
+            <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'overview' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Overview" : ""}>
               <BarChart3 size={18} /> {!sidebarCollapsed && <span>Overview</span>}
             </button>
-            <button onClick={() => setActiveTab('inspectors')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'inspectors' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Inspector" : ""}>
+            <button onClick={() => setActiveTab('inspectors')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'inspectors' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Inspector" : ""}>
               <ShieldCheck size={18} /> {!sidebarCollapsed && <span>Inspector</span>}
             </button>
-            <button onClick={() => setActiveTab('vendors')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendors' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors" : ""}>
+            <button onClick={() => setActiveTab('vendors')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendors' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors" : ""}>
               <Users size={18} /> {!sidebarCollapsed && <span>Vendors</span>}
             </button>
-            <button onClick={() => setActiveTab('vendor_complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendor_complaints' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors by Complaints" : ""}>
+            <button onClick={() => setActiveTab('vendor_complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendor_complaints' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors by Complaints" : ""}>
               <AlertTriangle size={18} className="text-amber-600 shrink-0" />
               {!sidebarCollapsed && (
                 <span className="flex items-center justify-between flex-1 truncate">
@@ -214,10 +214,10 @@ export default function AdminDashboard() {
                 </span>
               )}
             </button>
-            <button onClick={() => setActiveTab('complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'complaints' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Complaints" : ""}>
+            <button onClick={() => setActiveTab('complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'complaints' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Complaints" : ""}>
               <MessageSquareWarning size={18} /> {!sidebarCollapsed && <span>Complaints</span>}
             </button>
-            <button onClick={() => setActiveTab('appointments')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'appointments' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Appointments" : ""}>
+            <button onClick={() => setActiveTab('appointments')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'appointments' ? 'bg-[#D2DFFF]/30 text-[#162F6A] border-l-4 border-[#162F6A]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Appointments" : ""}>
               <Calendar size={18} /> {!sidebarCollapsed && <span>Appointments</span>}
             </button>
 
@@ -235,13 +235,13 @@ export default function AdminDashboard() {
                 <div className="pl-10 pr-2 py-1 space-y-1">
                   <button 
                     onClick={() => { setActiveTab('raise_complaint'); setComplaintForm(f => ({...f, targetType: 'inspector'})); }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'raise_complaint' && complaintForm.targetType === 'inspector' ? 'bg-orange-50 text-orange-700' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'raise_complaint' && complaintForm.targetType === 'inspector' ? 'bg-[#D2DFFF]/40 text-[#162F6A] font-semibold' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
                   >
                     Inspector
                   </button>
                   <button 
                     onClick={() => { setActiveTab('raise_complaint'); setComplaintForm(f => ({...f, targetType: 'vendor'})); }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'raise_complaint' && complaintForm.targetType === 'vendor' ? 'bg-orange-50 text-orange-700' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'raise_complaint' && complaintForm.targetType === 'vendor' ? 'bg-[#D2DFFF]/40 text-[#162F6A] font-semibold' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
                   >
                     Vendor
                   </button>

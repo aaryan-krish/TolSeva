@@ -79,14 +79,9 @@ router.get('/verify/:certificateId', async (req, res, next) => {
         unit: instrument.unit
       } : null,
       business: {
-        id: vendor?.id || null,
         name: vendor?.business_name || 'Registered Establishment',
-        owner_name: vendor?.owner_name || null,
-        gstin: vendor?.gstin || null,
         city: vendor?.city || null,
-        state: vendor?.state || null,
-        address: vendor?.address || null,
-        phone: vendor?.phone || null
+        state: vendor?.state || null
       },
       inspector: {
         id: inspector?.id || null,

@@ -116,7 +116,7 @@ function FormattedMessage({ text, isBot }) {
               )
             } else if (token.startsWith('`') && token.endsWith('`')) {
               parts.push(
-                <code key={match.index} className="px-1.5 py-0.5 rounded text-xs bg-gray-100 text-orange-700 font-mono">
+                <code key={match.index} className="px-1.5 py-0.5 rounded text-xs bg-[#D2DFFF]/40 text-[#162F6A] font-mono">
                   {token.slice(1, -1)}
                 </code>
               )
@@ -133,7 +133,7 @@ function FormattedMessage({ text, isBot }) {
           const content = trimmed.replace(/^[*\-]\s+/, '')
           return (
             <div key={idx} className="flex items-start gap-2 pl-1">
-              <span className={`inline-block w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isBot ? 'bg-orange-500' : 'bg-orange-200'}`} />
+              <span className={`inline-block w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isBot ? 'bg-[#214AAB]' : 'bg-[#A3BBF3]'}`} />
               <div className="flex-1">{formatInline(content)}</div>
             </div>
           )
@@ -144,7 +144,7 @@ function FormattedMessage({ text, isBot }) {
           if (numMatch) {
             return (
               <div key={idx} className="flex items-start gap-2 pl-1">
-                <span className={`font-semibold flex-shrink-0 text-xs mt-0.5 ${isBot ? 'text-orange-600' : 'text-orange-200'}`}>
+                <span className={`font-semibold flex-shrink-0 text-xs mt-0.5 ${isBot ? 'text-[#214AAB]' : 'text-[#A3BBF3]'}`}>
                   {numMatch[1]}
                 </span>
                 <div className="flex-1">{formatInline(numMatch[2])}</div>
@@ -687,11 +687,11 @@ export default function VoiceChatbot() {
         <div className="fixed bottom-6 right-6 z-50 group flex items-center">
           <button
             onClick={() => setOpen(true)}
-            className="relative flex items-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white shadow-2xl hover:shadow-orange-500/40 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-orange-400"
+            className="relative flex items-center gap-2 px-4 py-3.5 rounded-full bg-gradient-to-r from-[#162F6A] via-[#1A387E] to-[#214AAB] text-white shadow-2xl hover:shadow-[#214AAB]/40 hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-[#5279D7]"
             title={`${t('assistantTitle') || 'Chat Wizard'} • Ask AI`}
           >
             <div className="relative">
-              <Sparkles className="w-5 h-5 text-amber-200 animate-spin" style={{ animationDuration: '8s' }} />
+              <Sparkles className="w-5 h-5 text-[#D2DFFF] animate-spin" style={{ animationDuration: '8s' }} />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border border-white animate-pulse" />
             </div>
             <div className="text-left font-bold text-sm tracking-wide flex items-center gap-1.5">
@@ -705,24 +705,24 @@ export default function VoiceChatbot() {
       {/* Chat Wizard Modal Box */}
       {open && (
         <div
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[94vw] sm:w-[420px] bg-white rounded-2xl shadow-2xl border border-orange-200/80 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[94vw] sm:w-[420px] bg-white rounded-2xl shadow-2xl border border-[#A3BBF3]/70 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           style={{ height: '580px', maxHeight: '90vh' }}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-orange-700 via-orange-600 to-amber-600 px-4 py-3.5 flex items-center justify-between text-white flex-shrink-0 shadow-md">
+          <div className="bg-gradient-to-r from-[#162F6A] via-[#1A387E] to-[#214AAB] px-4 py-3.5 flex items-center justify-between text-white flex-shrink-0 shadow-md">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center shadow-inner relative">
-                <Sparkles size={18} className="text-amber-200" />
+                <Sparkles size={18} className="text-[#D2DFFF]" />
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border border-white rounded-full" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm leading-tight tracking-wide">{t('assistantTitle') || 'Chat Wizard'}</h3>
+                  <h3 className="font-bold text-sm leading-tight tracking-wide text-white">{t('assistantTitle') || 'Chat Wizard'}</h3>
                   <span className="text-[9px] bg-emerald-500/90 text-white font-bold px-1.5 py-0.2 rounded-md uppercase tracking-wider">
                     {currentLangObj?.name || 'AI'}
                   </span>
                 </div>
-                <p className="text-orange-100 text-[11px] leading-tight opacity-90">{t('assistantSub') || 'AI Legal Metrology Assistant'}</p>
+                <p className="text-[#D2DFFF] text-[11px] leading-tight opacity-90">{t('assistantSub') || 'AI Legal Metrology Assistant'}</p>
               </div>
             </div>
 
@@ -730,21 +730,21 @@ export default function VoiceChatbot() {
               <button
                 onClick={handleResetChat}
                 title="Reset conversation"
-                className="p-1.5 text-orange-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1.5 text-[#D2DFFF] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 <RotateCcw size={15} />
               </button>
               <button
                 onClick={() => setTtsEnabled(t => !t)}
                 title={ttsEnabled ? 'Mute voice responses' : 'Enable voice responses'}
-                className="p-1.5 text-orange-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1.5 text-[#D2DFFF] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
               <button
                 onClick={handleClose}
                 title="Close Chat Wizard"
-                className="p-1.5 text-orange-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors ml-1"
+                className="p-1.5 text-[#D2DFFF] hover:text-white hover:bg-white/10 rounded-lg transition-colors ml-1"
               >
                 <X size={18} />
               </button>
@@ -760,14 +760,14 @@ export default function VoiceChatbot() {
               return (
                 <div key={i} className={`flex gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
                   {!isUser && (
-                    <div className="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                      <Sparkles size={14} className="text-amber-200" />
+                    <div className="w-7 h-7 rounded-lg bg-[#162F6A] text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                      <Sparkles size={14} className="text-[#D2DFFF]" />
                     </div>
                   )}
 
                   <div className={`group relative max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
                     isUser
-                      ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-br-sm'
+                      ? 'bg-gradient-to-r from-[#162F6A] to-[#214AAB] text-white rounded-br-sm'
                       : 'bg-white text-gray-800 border border-slate-200/80 rounded-bl-sm'
                   }`}>
                     <FormattedMessage text={msg.text} isBot={!isUser} />
@@ -775,14 +775,14 @@ export default function VoiceChatbot() {
                     {/* Bot Message Footer Actions */}
                     {!isUser && (
                       <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100 text-[11px] text-gray-400">
-                        <span className="flex items-center gap-1 font-medium text-[10px] text-orange-700/80 uppercase">
+                        <span className="flex items-center gap-1 font-medium text-[10px] text-[#214AAB] uppercase">
                           {msg.source?.startsWith('gemini') ? '✨ Gemini AI' : '⚖️ Legal Metrology AI'}
                         </span>
                         <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => toggleSpeechForMessage(msg.text, i)}
                             title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
-                            className={`p-1 rounded hover:bg-gray-100 transition-colors ${isSpeaking ? 'text-orange-600 animate-pulse' : 'text-gray-500'}`}
+                            className={`p-1 rounded hover:bg-gray-100 transition-colors ${isSpeaking ? 'text-[#214AAB] animate-pulse' : 'text-gray-500'}`}
                           >
                             <Volume2 size={13} />
                           </button>
@@ -811,7 +811,7 @@ export default function VoiceChatbot() {
             {messages.length <= 4 && (
               <div className="pt-2">
                 <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <Sparkles size={11} className="text-orange-500" /> {currentLangData.quickTopics}
+                  <Sparkles size={11} className="text-[#214AAB]" /> {currentLangData.quickTopics}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {currentLangData.prompts.map((qp, idx) => (
@@ -819,7 +819,7 @@ export default function VoiceChatbot() {
                       key={idx}
                       onClick={() => handleQuickPrompt(qp.query)}
                       disabled={loading}
-                      className="text-xs bg-white hover:bg-orange-50 hover:border-orange-300 text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 transition-all text-left shadow-2xs hover:shadow-xs active:scale-95"
+                      className="text-xs bg-white hover:bg-[#D2DFFF]/40 hover:border-[#5279D7] text-gray-700 border border-gray-200 rounded-full px-3 py-1.5 transition-all text-left shadow-2xs hover:shadow-xs active:scale-95"
                     >
                       {qp.label}
                     </button>
@@ -831,18 +831,18 @@ export default function VoiceChatbot() {
             {/* Loading Indicator */}
             {loading && (
               <div className="flex gap-2 justify-start items-center">
-                <div className="w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <Sparkles size={14} className="text-amber-200 animate-spin" />
+                <div className="w-7 h-7 rounded-lg bg-[#162F6A] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Sparkles size={14} className="text-[#D2DFFF] animate-spin" />
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-xs">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <span className="font-medium text-orange-600">
+                    <span className="font-medium text-[#162F6A]">
                       {currentLangData.listening || 'Chat Wizard is thinking'}
                     </span>
                     <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="w-1.5 h-1.5 bg-[#214AAB] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-[#214AAB] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-[#214AAB] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
                 </div>
@@ -876,7 +876,7 @@ export default function VoiceChatbot() {
                   type="button"
                   onClick={handleStopListeningAndSend}
                   disabled={!input.trim()}
-                  className="px-2.5 py-1 rounded-full bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-semibold text-xs shadow-xs transition-colors"
+                  className="px-2.5 py-1 rounded-full bg-[#162F6A] hover:bg-[#214AAB] disabled:opacity-40 text-white font-semibold text-xs shadow-xs transition-colors"
                 >
                   Done &amp; Send
                 </button>
@@ -906,7 +906,7 @@ export default function VoiceChatbot() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={listening ? currentLangData.listening : currentLangData.placeholder}
-                className="flex-1 text-sm bg-slate-50 border border-gray-300 rounded-full px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all placeholder:text-gray-400"
+                className="flex-1 text-sm bg-slate-50 border border-gray-300 rounded-full px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#214AAB] focus:bg-white transition-all placeholder:text-gray-400"
                 disabled={loading}
               />
 
@@ -918,7 +918,7 @@ export default function VoiceChatbot() {
                   className={`p-2.5 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
                     listening
                       ? 'bg-red-500 text-white ring-4 ring-red-200 animate-pulse'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700 disabled:opacity-40'
+                      : 'bg-gray-100 text-gray-700 hover:bg-[#D2DFFF]/50 hover:text-[#162F6A] disabled:opacity-40'
                   }`}
                   title={listening ? 'Click to finish and send' : currentLangData.micHint}
                 >
@@ -929,7 +929,7 @@ export default function VoiceChatbot() {
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="p-2.5 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:from-orange-500 hover:to-amber-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-md hover:shadow-orange-500/25 active:scale-95 transition-all flex items-center justify-center flex-shrink-0"
+                className="p-2.5 rounded-full bg-gradient-to-r from-[#162F6A] to-[#214AAB] text-white hover:from-[#13285B] hover:to-[#162F6A] disabled:opacity-40 disabled:cursor-not-allowed shadow-md hover:shadow-[#214AAB]/25 active:scale-95 transition-all flex items-center justify-center flex-shrink-0"
                 title="Send message"
               >
                 <Send size={17} />
@@ -939,8 +939,11 @@ export default function VoiceChatbot() {
             <div className="flex items-center justify-between text-[11px] text-gray-400 px-2 mt-2">
               <span>{supported ? currentLangData.micHint : '⌨️ Type query'}</span>
               <span className="flex items-center gap-1">
-                <Scale size={11} className="text-orange-600" /> {currentLangData.actHint}
+                <Scale size={11} className="text-[#162F6A]" /> {currentLangData.actHint}
               </span>
+            </div>
+            <div className="text-center text-[10px] text-gray-400 px-2 mt-1.5 opacity-80">
+              AI-generated responses. Please verify official legal documents.
             </div>
           </div>
         </div>

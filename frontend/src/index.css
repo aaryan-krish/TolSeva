@@ -3,42 +3,86 @@
 @tailwind utilities;
 
 @layer base {
-  h1, h2, h3 { font-family: 'Cinzel', serif; }
+  html {
+    font-family: 'Noto Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+    color: #162F6A; /* DBIM Key Blue for headings */
+    text-align: left;
+    letter-spacing: -0.015em;
+  }
+  /* DBIM Desktop Type Scale (Table 3) */
+  h1 {
+    font-size: 36px;
+    line-height: 1.25;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+  h3 {
+    font-size: 20px;
+    line-height: 1.35;
+    font-weight: 600;
+  }
   body {
-    @apply font-sans text-gray-900 bg-gray-50;
+    @apply font-sans bg-white;
+    color: #150202; /* DBIM Deep Earthy Brown text for light backgrounds */
+    text-align: left; /* DBIM Rule 4.1.1: Body text must be left-aligned */
+  }
+
+  /* DBIM Table alignment rules (Section 4.1.1) */
+  table th {
+    text-align: center;
+  }
+  table td {
+    text-align: left;
+  }
+  table td.numeric, table td[data-numeric="true"] {
+    text-align: right;
   }
 }
 
 @layer components {
+  /* DBIM Key Blue Button (Darkest shade #162F6A hover #214AAB) */
   .btn-primary {
-    @apply bg-orange-600 text-white px-5 py-2.5 rounded-md font-semibold hover:bg-orange-700 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 shadow-sm;
+    @apply bg-[#162F6A] text-white px-5 py-2.5 rounded-md font-semibold hover:bg-[#214AAB] transition-colors focus:outline-none focus:ring-2 focus:ring-[#5279D7] focus:ring-offset-2 shadow-sm;
   }
+  /* DBIM Variant 2 Royal Blue Button (#214AAB hover #162F6A) */
   .btn-secondary {
-    @apply bg-emerald-700 text-white px-5 py-2.5 rounded-md font-semibold hover:bg-emerald-800 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 shadow-sm;
+    @apply bg-[#214AAB] text-white px-5 py-2.5 rounded-md font-semibold hover:bg-[#162F6A] transition-colors focus:outline-none focus:ring-2 focus:ring-[#5279D7] focus:ring-offset-2 shadow-sm;
   }
+  /* DBIM Outline Button */
   .btn-outline {
-    @apply border-2 border-orange-600 text-orange-600 px-5 py-2.5 rounded-md font-semibold hover:bg-orange-600 hover:text-white transition-colors;
+    @apply border-2 border-[#162F6A] text-[#162F6A] px-5 py-2.5 rounded-md font-semibold hover:bg-[#162F6A] hover:text-white transition-colors;
   }
+  /* DBIM Card with Linen border */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-lg shadow-sm border border-[#EBEAEA] p-6;
   }
+  /* DBIM Form Field with Grey 01 border */
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm transition-all;
+    @apply w-full px-4 py-2.5 border border-[#C6C6C6] rounded-md focus:outline-none focus:ring-2 focus:ring-[#214AAB] focus:border-[#214AAB] text-sm transition-all;
   }
+  /* DBIM Status Badges */
   .badge-expired {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-[#DC3545] border border-red-200;
   }
   .badge-expiring {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300;
   }
   .badge-approaching {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-900 border border-yellow-300;
   }
   .badge-valid {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-[#198754] border border-emerald-300;
   }
   .badge-pending {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBEAEA] text-[#606060] border border-[#C6C6C6];
   }
 }
 
@@ -48,12 +92,7 @@
   height: 5px;
 }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom scrollbar */
+/* Custom scrollbar in DBIM Key Blue */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #162F6A; border-radius: 3px; }

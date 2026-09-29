@@ -11,6 +11,8 @@ services:
         sync: false
       - key: MONGODB_DB
         value: tolseva
+      - key: GEMINI_API_KEY
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN

@@ -172,13 +172,13 @@ export default function LoginModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
-        <div className="bg-orange-600 px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#162F6A] border-b border-[#214AAB] px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {isResetting && (
               <button
                 type="button"
                 onClick={() => { setIsResetting(false); setError(''); setSuccessMsg('') }}
-                className="text-white hover:text-orange-200 p-1 rounded transition-colors mr-1"
+                className="text-white hover:text-[#A3BBF3] p-1 rounded transition-colors mr-1"
                 title="Back to Login"
               >
                 <ArrowLeft size={18} />
@@ -189,13 +189,13 @@ export default function LoginModal({ onClose }) {
                 {isResetting ? 'Reset Password' : 'Login to TolSeva'}
               </h2>
               {isResetting && (
-                <span className="text-xs text-orange-200 capitalize">
+                <span className="text-xs text-[#A3BBF3] capitalize">
                   {role} Account Password Recovery
                 </span>
               )}
             </div>
           </div>
-          <button onClick={onClose} className="text-white hover:text-orange-200 transition-colors">
+          <button onClick={onClose} className="text-white hover:text-[#A3BBF3] transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -210,7 +210,7 @@ export default function LoginModal({ onClose }) {
             <button
               key={key}
               onClick={() => switchRole(key)}
-              className={"flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors " + (role === key ? 'border-b-2 border-orange-600 text-orange-600 bg-orange-50' : 'text-gray-500 hover:text-gray-700')}
+              className={"flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors " + (role === key ? 'border-b-2 border-[#162F6A] text-[#162F6A] bg-[#D2DFFF]/20' : 'text-gray-500 hover:text-gray-700')}
             >
               <Icon size={15} /> {label}
             </button>
@@ -270,7 +270,7 @@ export default function LoginModal({ onClose }) {
                     <button
                       type="button"
                       onClick={() => { setIsResetting(false); setError('') }}
-                      className="text-xs text-emerald-700 hover:text-emerald-900 font-semibold underline"
+                      className="text-xs text-[#214AAB] hover:text-[#162F6A] font-semibold underline"
                     >
                       ← Back to regular login
                     </button>
@@ -278,17 +278,17 @@ export default function LoginModal({ onClose }) {
                 </form>
               ) : (
                 <form onSubmit={handleVerifyResetPassword} className="space-y-4">
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-900">
-                    <p className="font-medium text-emerald-800">
+                  <div className="p-3 bg-[#D2DFFF]/30 border border-[#A3BBF3]/50 rounded-lg text-xs text-[#162F6A]">
+                    <p className="font-medium text-[#162F6A]">
                       Verification code dispatched to registered mobile ending in:
                     </p>
-                    <p className="font-bold text-sm tracking-wider text-emerald-950 mt-0.5">
+                    <p className="font-bold text-sm tracking-wider text-[#162F6A] mt-0.5">
                       +91 {maskedPhone || '******'}
                     </p>
                     <button
                       type="button"
                       onClick={() => { setResetStep(1); setError('') }}
-                      className="text-emerald-700 hover:text-emerald-900 underline mt-1.5 font-semibold text-xs inline-block"
+                      className="text-[#214AAB] hover:text-[#162F6A] underline mt-1.5 font-semibold text-xs inline-block"
                     >
                       Change ID / Mobile
                     </button>
@@ -356,7 +356,7 @@ export default function LoginModal({ onClose }) {
                     <button
                       type="button"
                       onClick={() => { setIsResetting(false); setResetStep(1); setError('') }}
-                      className="text-xs text-emerald-700 hover:text-emerald-900 font-semibold underline"
+                      className="text-xs text-[#214AAB] hover:text-[#162F6A] font-semibold underline"
                     >
                       Cancel and back to login
                     </button>
@@ -397,7 +397,7 @@ export default function LoginModal({ onClose }) {
                   Fill demo OTP
                 </button>
               )}
-              <p className="text-sm text-gray-600">OTP sent to +91{form.phone}. <button type="button" className="text-emerald-600 underline" onClick={() => setStep(1)}>Change</button></p>
+              <p className="text-sm text-gray-600">OTP sent to +91{form.phone}. <button type="button" className="text-[#214AAB] underline font-semibold hover:text-[#162F6A]" onClick={() => setStep(1)}>Change</button></p>
               <div>
                 <label className="block text-sm font-semibold mb-1">Enter OTP *</label>
                 <input name="otp" value={form.otp} onChange={update} className="input-field text-center text-xl tracking-[0.5em] font-bold" placeholder="000000" maxLength={6} required />
@@ -406,7 +406,7 @@ export default function LoginModal({ onClose }) {
                 type="button"
                 onClick={handleVendorRequestOtp}
                 disabled={loading}
-                className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-semibold underline disabled:opacity-50"
+                className="w-full text-sm text-[#214AAB] hover:text-[#162F6A] font-semibold underline disabled:opacity-50"
               >
                 {loading ? 'Sending new OTP...' : 'Resend OTP'}
               </button>
@@ -431,7 +431,7 @@ export default function LoginModal({ onClose }) {
                   <button
                     type="button"
                     onClick={startReset}
-                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
+                    className="text-xs font-semibold text-[#214AAB] hover:text-[#162F6A] hover:underline"
                   >
                     Forgot Password?
                   </button>
@@ -474,7 +474,7 @@ export default function LoginModal({ onClose }) {
                   <button
                     type="button"
                     onClick={startReset}
-                    className="text-xs font-semibold text-orange-600 hover:text-orange-700 hover:underline"
+                    className="text-xs font-semibold text-[#214AAB] hover:text-[#162F6A] hover:underline"
                   >
                     Forgot Password?
                   </button>

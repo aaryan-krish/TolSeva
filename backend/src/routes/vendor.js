@@ -11,8 +11,24 @@ const vendorAuth = authenticate(['vendor']);
 router.get('/machines', vendorAuth, async (req, res, next) => {
   try {
     const db = getDb();
-    const vendor = await db.collection('vendors').findOne({ id: req.user.id });
-    const machines = await db.collection('instruments').find({ vendor_id: req.user.id }).sort({ expiry_date: 1 }).toArray();
+    const vendor = await db.collection('vendors').findOne({
+      $or: [
+        { id: req.user.id },
+        ...(req.user.gstin ? [{ gstin: req.user.gstin }] : [])
+      ]
+    });
+
+    const vendorIds = [req.user.id];
+    if (vendor?.id && !vendorIds.includes(vendor.id)) vendorIds.push(vendor.id);
+    if (vendor?._id) vendorIds.push(vendor._id.toString());
+    if (vendor?.gstin) vendorIds.push(vendor.gstin);
+
+    const machines = await db.collection('instruments').find({
+      $or: [
+        { vendor_id: { $in: vendorIds } },
+        { vendorId: { $in: vendorIds } }
+      ]
+    }).sort({ expiry_date: 1 }).toArray();
 
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr);
@@ -158,7 +174,24 @@ router.post('/machines', vendorAuth, async (req, res, next) => {
 router.get('/appointments', vendorAuth, async (req, res, next) => {
   try {
     const db = getDb();
-    const appointments = await db.collection('appointments').find({ vendor_id: req.user.id }).sort({ preferred_date: -1 }).toArray();
+    const vendor = await db.collection('vendors').findOne({
+      $or: [
+        { id: req.user.id },
+        ...(req.user.gstin ? [{ gstin: req.user.gstin }] : [])
+      ]
+    });
+
+    const vendorIds = [req.user.id];
+    if (vendor?.id && !vendorIds.includes(vendor.id)) vendorIds.push(vendor.id);
+    if (vendor?._id) vendorIds.push(vendor._id.toString());
+    if (vendor?.gstin) vendorIds.push(vendor.gstin);
+
+    const appointments = await db.collection('appointments').find({
+      $or: [
+        { vendor_id: { $in: vendorIds } },
+        { vendorId: { $in: vendorIds } }
+      ]
+    }).sort({ preferred_date: -1 }).toArray();
 
     // Enrich with instrument and inspector info
     const enriched = await Promise.all(appointments.map(async (a) => {

@@ -145,20 +145,20 @@ export default function PublicVerifyPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-slate-900 text-white py-8 px-4 border-b-4 border-orange-500 shadow-md">
+      <div className="bg-gradient-to-r from-[#162F6A] via-[#1A387E] to-[#214AAB] text-white py-8 px-4 border-b-4 border-[#5279D7] shadow-md">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-inner shrink-0">
               🏛️
             </div>
             <div>
-              <p className="text-2xs sm:text-xs font-bold uppercase tracking-widest text-emerald-200">
+              <p className="text-2xs sm:text-xs font-bold uppercase tracking-widest text-[#D2DFFF]">
                 Government of India • Ministry of Consumer Affairs
               </p>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
                 Legal Metrology Verification Registry
               </h1>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-[#A3BBF3]">
                 Live Public Verification &amp; Consumer Protection Service
               </p>
             </div>
@@ -175,7 +175,7 @@ export default function PublicVerifyPage() {
       <div className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
         {loading ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
-            <div className="animate-spin w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full mx-auto mb-4" />
+            <div className="animate-spin w-12 h-12 border-4 border-[#214AAB] border-t-transparent rounded-full mx-auto mb-4" />
             <p className="text-base font-semibold text-gray-800">Verifying Certificate Authenticity...</p>
             <p className="text-xs text-gray-500 mt-1">Connecting to Government National Metrology Registry</p>
           </div>
@@ -263,22 +263,10 @@ export default function PublicVerifyPage() {
                       <span className="text-gray-500">Business Name:</span>
                       <span className="font-bold text-gray-900">{certData.business?.name}</span>
                     </div>
-                    {certData.business?.owner_name && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Owner:</span>
-                        <span className="font-medium text-gray-800">{certData.business.owner_name}</span>
-                      </div>
-                    )}
-                    {certData.business?.gstin && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">GSTIN:</span>
-                        <span className="font-mono font-bold text-gray-900">{certData.business.gstin}</span>
-                      </div>
-                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-500">Location:</span>
                       <span className="font-medium text-gray-800 text-right">
-                        {[certData.business?.address, certData.business?.city, certData.business?.state].filter(Boolean).join(', ') || 'Registered Location'}
+                        {[certData.business?.city, certData.business?.state].filter(Boolean).join(', ') || 'Registered Location'}
                       </span>
                     </div>
                   </div>
