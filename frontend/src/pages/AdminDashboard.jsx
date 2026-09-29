@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Crown, LogOut, Users, ShieldCheck, Calendar, BarChart3, Search, X, MessageSquareWarning } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getAdminDashboard, getAdminVendors, getAdminInspectors, getAdminAppointments, assignInspector, getAdminComplaints, createAdminComplaint, updateAdminComplaint, getAdminVendorDetails } from '../services/api.js'
+import ProfileMenu from '../components/profile/ProfileMenu.jsx'
 
 export default function AdminDashboard() {
   const { auth, logout } = useAuth()
@@ -167,9 +168,7 @@ export default function AdminDashboard() {
               <p className="text-emerald-100 text-sm">TolSeva National Control Panel</p>
             </div>
           </div>
-          <button onClick={() => { logout(); navigate('/') }} className="flex items-center gap-2 text-sm border border-white/30 rounded px-3 py-2 hover:bg-white/10 transition-colors">
-            <LogOut size={16} /> Logout
-          </button>
+          <ProfileMenu variant="banner" />
         </div>
       </div>
 
@@ -379,30 +378,122 @@ export default function AdminDashboard() {
 
               {activeTab === 'complaints' && (
                 <div className="card overflow-x-auto">
-                  <h2 className="font-bold text-lg mb-4">Complaint Inbox ({complaints.length})</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                      <h2 className="font-bold text-lg text-gray-900">Complaints &amp; Violations Registry</h2>
+                      <p className="text-xs text-gray-500">Includes live citizen complaints filed via QR code scans and internal administrative reports.</p>
+                    </div>
+                    <span className="text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto">
+                      Total: {complaints.length}
+                    </span>
+                  </div>
+
                   <table className="w-full text-sm">
-                    <thead><tr className="bg-gray-50 border-b">
-                      {['Target', 'Category', 'Description', 'Date', 'Status'].map(h => <th key={h} className="px-4 py-3 text-left font-semibold text-gray-700">{h}</th>)}
-                    </tr></thead>
-                    <tbody className="divide-y">
-                      {complaints.map(complaint => (
-                        <tr key={complaint.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 font-semibold">{complaint.type?.includes('VENDOR') ? complaint.vendor_business_name || complaint.vendorId : complaint.inspector_name || complaint.inspector_gov_id || complaint.inspectorId}</td>
-                          <td className="px-4 py-3">{complaint.category}</td>
-                          <td className="px-4 py-3 max-w-sm">{complaint.description}</td>
-                          <td className="px-4 py-3 whitespace-nowrap">{new Date(complaint.createdAt).toLocaleDateString('en-IN')}</td>
-                          <td className="px-4 py-3">
-                            <select value={complaint.status} onChange={e => handleComplaintStatus(complaint.id, e.target.value)} className="text-xs border border-gray-300 rounded px-2 py-1">
-                              <option value="OPEN">OPEN</option>
-                              <option value="INVESTIGATING">INVESTIGATING</option>
-                              <option value="RESOLVED">RESOLVED</option>
-                            </select>
-                          </td>
-                        </tr>
-                      ))}
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        {['Source', 'Target Establishment / Machine', 'Complainant', 'Violation / Category', 'Description', 'Filed Date', 'Status & Action'].map(h => (
+                          <th key={h} className="px-4 py-3 text-left font-semibold text-gray-700 whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {complaints.map(complaint => {
+                        const isCitizen = complaint.type === 'PUBLIC_ABOUT_INSTRUMENT' || Boolean(complaint.complainant_phone)
+                        const isInspector = complaint.type?.includes('INSPECTOR')
+                        return (
+                          <tr key={complaint.id} className="hover:bg-gray-50 transition-colors">
+                            {/* Source Badge */}
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {isCitizen ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                  📱 Citizen QR Report
+                                </span>
+                              ) : isInspector ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                  🛡️ Inspector Issue
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                  🏢 Vendor Dispute
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Target Details */}
+                            <td className="px-4 py-3">
+                              <div className="font-semibold text-gray-900">
+                                {isInspector
+                                  ? (complaint.inspector_name || complaint.inspector_gov_id || complaint.inspectorId)
+                                  : (complaint.vendor_business_name || complaint.vendorId || 'Vendor Establishment')}
+                              </div>
+                              {complaint.instrument_make && (
+                                <div className="text-2xs text-gray-500 font-mono mt-0.5">
+                                  Machine: {complaint.instrument_make} {complaint.instrument_serial_no ? `(${complaint.instrument_serial_no})` : ''}
+                                </div>
+                              )}
+                              {complaint.certificateId && (
+                                <div className="text-2xs text-emerald-700 font-mono mt-0.5">
+                                  Cert: {complaint.certificateId}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Complainant (Citizen / Admin) */}
+                            <td className="px-4 py-3">
+                              {isCitizen ? (
+                                <div>
+                                  <div className="font-semibold text-gray-900 text-xs">
+                                    {complaint.complainant_name || 'Citizen'}
+                                  </div>
+                                  <div className="text-2xs text-gray-500 font-mono flex items-center gap-1 mt-0.5">
+                                    📱 +91 {complaint.complainant_phone}
+                                    <span className="text-emerald-700 font-bold" title="Mobile verified with OTP">✓ Verified</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400 italic">Department Admin</span>
+                              )}
+                            </td>
+
+                            {/* Category */}
+                            <td className="px-4 py-3 text-xs font-semibold text-gray-800">
+                              {complaint.category}
+                            </td>
+
+                            {/* Description */}
+                            <td className="px-4 py-3 max-w-xs text-xs text-gray-600 leading-relaxed">
+                              {complaint.description}
+                            </td>
+
+                            {/* Date */}
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-500 font-mono">
+                              {new Date(complaint.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </td>
+
+                            {/* Status & Decision Action */}
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <select
+                                value={complaint.status}
+                                onChange={e => handleComplaintStatus(complaint.id, e.target.value)}
+                                className={`text-xs font-semibold border rounded-lg px-2.5 py-1.5 focus:outline-none transition-colors ${
+                                  complaint.status === 'RESOLVED'
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                    : complaint.status === 'INVESTIGATING'
+                                      ? 'bg-blue-50 text-blue-800 border-blue-300'
+                                      : 'bg-amber-50 text-amber-800 border-amber-300'
+                                }`}
+                              >
+                                <option value="OPEN">🔴 OPEN</option>
+                                <option value="INVESTIGATING">🟡 INVESTIGATING</option>
+                                <option value="RESOLVED">🟢 RESOLVED</option>
+                              </select>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
-                  {complaints.length === 0 && <p className="text-center text-sm text-gray-500 py-8">No complaints found.</p>}
+                  {complaints.length === 0 && <p className="text-center text-sm text-gray-500 py-8">No complaints in registry.</p>}
                 </div>
               )}
 

@@ -15,7 +15,7 @@ async function buildCertificateQR({
   verifiedAt,
   validUntil
 }) {
-  const publicBaseUrl = process.env.PUBLIC_VERIFY_URL || process.env.APP_URL || 'https://tolseva.gov.in';
+  const publicBaseUrl = process.env.PUBLIC_VERIFY_URL || process.env.APP_URL || 'http://localhost:5173';
   const cleanBase = publicBaseUrl.replace(/\/+$/, '');
   
   // Set qrPayload to a full public URL rather than an arbitrary JSON string

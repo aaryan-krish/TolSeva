@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { query, getDb } = require('../config/db');
 const { signToken } = require('../utils/jwt');
 const { generateOtp, getOtpExpiry, sendOtp, isDemoMode, isLocalRequest } = require('../utils/otp');
+const authenticate = require('../middleware/auth');
 
 // Helper to normalize phone numbers to last 10 digits
 function normalizePhone(p) {
@@ -357,6 +358,88 @@ router.post('/reset-password/verify', async (req, res, next) => {
     res.json({
       message: 'Password reset successfully! You can now log in with your new password.',
       success: true
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── CURRENT USER: Get Profile ───────────────────────────────────────────────
+router.get('/me', authenticate(), async (req, res, next) => {
+  try {
+    const { id, role } = req.user;
+    const db = getDb();
+    let user = null;
+
+    if (role === 'vendor') {
+      user = await db.collection('vendors').findOne({ id });
+    } else if (role === 'inspector') {
+      user = await db.collection('inspectors').findOne({ id });
+    } else if (role === 'admin') {
+      user = await db.collection('admins').findOne({ id });
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'User profile not found' });
+    }
+
+    const { password_hash, otp, otp_expires_at, ...safeUser } = user;
+    res.json({ user: safeUser, role });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── CHANGE PASSWORD (Authenticated) ──────────────────────────────────────────
+router.post('/change-password', authenticate(), async (req, res, next) => {
+  try {
+    const { id, role } = req.user;
+    const { current_password, new_password } = req.body;
+
+    if (!new_password || String(new_password).length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    const db = getDb();
+    let user = null;
+    let collectionName = '';
+
+    if (role === 'vendor') {
+      collectionName = 'vendors';
+      user = await db.collection('vendors').findOne({ id });
+    } else if (role === 'inspector') {
+      collectionName = 'inspectors';
+      user = await db.collection('inspectors').findOne({ id });
+    } else if (role === 'admin') {
+      collectionName = 'admins';
+      user = await db.collection('admins').findOne({ id });
+    }
+
+    if (!user) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    // If account has an existing password_hash, verify current_password
+    if (user.password_hash) {
+      if (!current_password) {
+        return res.status(400).json({ error: 'Current password is required' });
+      }
+      const isMatch = await bcrypt.compare(current_password, user.password_hash);
+      if (!isMatch) {
+        return res.status(401).json({ error: 'Current password is incorrect' });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(String(new_password).trim(), 10);
+
+    await db.collection(collectionName).updateOne(
+      { id: user.id },
+      { $set: { password_hash: passwordHash, updated_at: new Date() } }
+    );
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
     });
   } catch (err) {
     next(err);

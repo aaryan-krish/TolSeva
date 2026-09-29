@@ -11,10 +11,23 @@ const vendorAuth = authenticate(['vendor']);
 router.get('/machines', vendorAuth, async (req, res, next) => {
   try {
     const db = getDb();
+    const vendor = await db.collection('vendors').findOne({ id: req.user.id });
     const machines = await db.collection('instruments').find({ vendor_id: req.user.id }).sort({ expiry_date: 1 }).toArray();
 
     const todayStr = new Date().toISOString().split('T')[0];
     const today = new Date(todayStr);
+
+    let detectedBase = process.env.PUBLIC_VERIFY_URL || process.env.APP_URL;
+    if (!detectedBase) {
+      const headerOrigin = req.headers.origin || req.headers.referer;
+      if (headerOrigin) {
+        try {
+          detectedBase = new URL(headerOrigin).origin;
+        } catch (_) {}
+      }
+    }
+    if (!detectedBase) detectedBase = 'http://localhost:5173';
+    const appUrl = detectedBase.replace(/\/+$/, '');
 
     const enriched = await Promise.all(machines.map(async i => {
       let expiryStatus = 'VALID';
@@ -45,9 +58,19 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
         },
         { sort: { verified_at: -1, createdAt: -1 } }
       );
-      const certificatePayload = certificate?.qr_payload || (certificate?.certificate_no
-        ? `${process.env.PUBLIC_VERIFY_URL || process.env.APP_URL || 'https://tolseva.gov.in'}/verify/${encodeURIComponent(certificate.certificate_no)}`
-        : null);
+
+      let inspector = null;
+      if (certificate) {
+        const inspId = certificate.inspector_id || certificate.inspectorId;
+        if (inspId) {
+          inspector = await db.collection('inspectors').findOne({ id: inspId });
+        }
+      }
+
+      // Always construct our own application verify page URL
+      const certificatePayload = certificate?.certificate_no
+        ? `${appUrl}/verify/${encodeURIComponent(certificate.certificate_no)}`
+        : null;
 
       return {
         ...i,
@@ -55,10 +78,31 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
         days_until_expiry: daysUntilExpiry,
         certificate: certificate ? {
           certificate_no: certificate.certificate_no,
+          verified_at: certificate.verified_at ? new Date(certificate.verified_at).toISOString().split('T')[0] : null,
           valid_until: certificate.valid_until || certificate.validUntil,
           test_result: certificate.test_result,
           qr_payload: certificatePayload,
-          qr_data_url: certificatePayload ? await QRCode.toDataURL(certificatePayload, { width: 400, margin: 2 }) : null
+          qr_data_url: certificatePayload ? await QRCode.toDataURL(certificatePayload, { width: 400, margin: 2 }) : null,
+          vendor: vendor ? {
+            business_name: vendor.business_name,
+            owner_name: vendor.owner_name,
+            gstin: vendor.gstin,
+            phone: vendor.phone,
+            address: vendor.address,
+            city: vendor.city,
+            state: vendor.state
+          } : null,
+          inspector: inspector ? {
+            name: inspector.full_name,
+            gov_id: inspector.gov_id,
+            designation: inspector.designation || 'Legal Metrology Inspector',
+            zone: inspector.zone
+          } : {
+            name: 'Legal Metrology Officer',
+            gov_id: 'INSP-LM-GOV',
+            designation: 'Legal Metrology Inspector',
+            zone: 'Central Jurisdiction'
+          }
         } : null
       };
     }));

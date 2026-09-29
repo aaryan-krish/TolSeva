@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage.jsx'
 import VendorDashboard from './pages/VendorDashboard.jsx'
 import InspectorDashboard from './pages/InspectorDashboard.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
+import PublicVerifyPage from './pages/PublicVerifyPage.jsx'
 import VoiceChatbot from './components/chatbot/VoiceChatbot.jsx'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
               <Route path="/vendor" element={<VendorDashboard />} />
               <Route path="/inspector" element={<InspectorDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/verify/:certificateId" element={<PublicVerifyPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

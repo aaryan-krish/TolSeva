@@ -36,6 +36,8 @@ export const inspectorLogin = (data) => api.post('/auth/inspector/login', data)
 export const adminLogin = (data) => api.post('/auth/admin/login', data)
 export const requestPasswordResetOtp = (data) => api.post('/auth/reset-password/request-otp', data)
 export const verifyPasswordReset = (data) => api.post('/auth/reset-password/verify', data)
+export const changePassword = (data) => api.post('/auth/change-password', data)
+export const getMe = () => api.get('/auth/me')
 
 // Vendor
 export const getMachines = () => api.get('/vendor/machines')
@@ -59,6 +61,12 @@ export const createInspector = (data) => api.post('/admin/inspectors', data)
 export const getAdminComplaints = () => api.get('/admin/complaints')
 export const createAdminComplaint = (data) => api.post('/admin/complaints', data)
 export const updateAdminComplaint = (id, data) => api.patch(`/admin/complaints/${id}`, data)
+
+// Public Verification & Citizen Complaints
+export const getPublicCertificate = (certificateId) => api.get(`/public/verify/${encodeURIComponent(certificateId)}`)
+export const requestPublicOtp = (data) => api.post('/public/request-otp', data)
+export const verifyPublicOtp = (data) => api.post('/public/verify-otp', data)
+export const submitPublicComplaint = (data) => api.post('/public/complaints', data)
 
 // Bot
 export const askBot = (query, lang = 'en') => api.post('/bot/assist', { query, lang })

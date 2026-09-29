@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import { useLanguage } from '../../context/LanguageContext.jsx'
 import LoginModal from '../auth/LoginModal.jsx'
 import LanguageSelector from '../common/LanguageSelector.jsx'
+import ProfileMenu from '../profile/ProfileMenu.jsx'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -48,14 +49,7 @@ export default function Navbar() {
               </div>
 
               {auth ? (
-                <div className="flex items-center gap-3">
-                  <Link to={dashboardLink} className="flex items-center gap-1.5 text-sm font-semibold text-orange-600 hover:text-orange-700">
-                    <User size={16} /> {auth.user?.business_name || auth.user?.full_name || auth.user?.username}
-                  </Link>
-                  <button onClick={handleLogout} className="flex items-center gap-1.5 btn-outline text-sm py-1.5">
-                    <LogOut size={14} /> {t('logout')}
-                  </button>
-                </div>
+                <ProfileMenu variant="navbar" />
               ) : (
                 <button onClick={() => setShowLogin(true)} className="btn-primary flex items-center gap-2 text-sm py-2">
                   <LogIn size={16} /> {t('login')}
@@ -66,6 +60,7 @@ export default function Navbar() {
             {/* Mobile Actions: Language + Hamburger */}
             <div className="flex items-center gap-2 md:hidden">
               <LanguageSelector variant="navbar" />
+              {auth && <ProfileMenu variant="navbar" />}
               <button className="p-2 text-gray-700" onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu">
                 {menuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -84,9 +79,7 @@ export default function Navbar() {
                 <a href="#contact" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navContact')}</a>
               </>
             )}
-            {auth ? (
-              <button onClick={handleLogout} className="btn-outline w-full text-sm">{t('logout')}</button>
-            ) : (
+            {!auth && (
               <button onClick={() => { setShowLogin(true); setMenuOpen(false) }} className="btn-primary w-full text-sm">{t('login')}</button>
             )}
           </div>

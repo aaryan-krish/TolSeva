@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { getAssignedVisits } from '../services/api.js'
 import VisitList from '../components/inspector/VisitList.jsx'
 import VerifyModal from '../components/inspector/VerifyModal.jsx'
+import ProfileMenu from '../components/profile/ProfileMenu.jsx'
 
 export default function InspectorDashboard() {
   const { auth, logout } = useAuth()
@@ -37,9 +38,7 @@ export default function InspectorDashboard() {
             <h1 className='text-2xl font-bold tracking-tight'>{auth.user?.full_name}</h1>
             <p className='text-emerald-100 text-sm'>ID: {auth.user?.gov_id} | Zone: {auth.user?.zone}</p>
           </div>
-          <button onClick={() => { logout(); navigate('/') }} className='flex items-center gap-2 text-sm border border-white/30 rounded px-3 py-2 hover:bg-white/10 transition-colors'>
-            <LogOut size={16} /> Logout
-          </button>
+          <ProfileMenu variant="banner" />
         </div>
       </div>
 

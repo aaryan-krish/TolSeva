@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { getDb } = require('../config/db');
+const { generateOtp, getOtpExpiry, sendOtp, isDemoMode, verifyOtpValue } = require('../utils/otp');
+
+// Helper to normalize phone to 10 digits
+function normalizePhone(p) {
+  if (!p) return '';
+  return String(p).trim().replace(/\D/g, '').slice(-10);
+}
 
 // ── GET /api/public/verify/:certificateId ────────────────────────────────────
-// Public, unauthenticated verification endpoint
+// Public verification endpoint
 router.get('/verify/:certificateId', async (req, res, next) => {
   try {
     const certParam = decodeURIComponent(req.params.certificateId).trim();
@@ -31,13 +38,15 @@ router.get('/verify/:certificateId', async (req, res, next) => {
     const instId = log.instrument_id || log.instrumentId;
     const instrument = instId ? await db.collection('instruments').findOne({ id: instId }) : null;
 
-    // Retrieve vendor for business name
+    // Retrieve vendor
     const vendorId = instrument?.vendor_id || log.vendor_id;
     const vendor = vendorId ? await db.collection('vendors').findOne({ id: vendorId }) : null;
 
-    // Retrieve inspector designation / gov_id
+    // Retrieve inspector
     const inspectorId = log.inspector_id || log.inspectorId;
-    const inspector = inspectorId ? await db.collection('inspectors').findOne({ id: inspectorId }) : null;
+    const inspector = inspectorId ? await db.collection('inspectors').findOne({
+      $or: [{ id: inspectorId }, { gov_id: inspectorId }]
+    }) : null;
 
     // Determine computed validity status
     const today = new Date();
@@ -54,7 +63,6 @@ router.get('/verify/:certificateId', async (req, res, next) => {
       computedStatus = 'EXPIRED';
     }
 
-    // Sanitize response: return ONLY public verification data (no personal owner names, phones, OTPs, or full addresses)
     res.json({
       certificate_no: log.certificate_no || log.certificateNo || log.id,
       status: computedStatus,
@@ -62,6 +70,7 @@ router.get('/verify/:certificateId', async (req, res, next) => {
       valid_until: log.valid_until || log.validUntil || null,
       test_result: log.test_result || 'PASS',
       instrument: instrument ? {
+        id: instrument.id,
         make: instrument.make,
         model: instrument.model,
         serial_no: instrument.serial_no,
@@ -70,13 +79,21 @@ router.get('/verify/:certificateId', async (req, res, next) => {
         unit: instrument.unit
       } : null,
       business: {
+        id: vendor?.id || null,
         name: vendor?.business_name || 'Registered Establishment',
+        owner_name: vendor?.owner_name || null,
+        gstin: vendor?.gstin || null,
         city: vendor?.city || null,
-        state: vendor?.state || null
+        state: vendor?.state || null,
+        address: vendor?.address || null,
+        phone: vendor?.phone || null
       },
       inspector: {
+        id: inspector?.id || null,
+        name: inspector?.full_name || 'Legal Metrology Officer',
         gov_id: inspector?.gov_id || 'Authorized Officer',
-        designation: inspector?.designation || 'Legal Metrology Inspector'
+        designation: inspector?.designation || 'Legal Metrology Inspector',
+        zone: inspector?.zone || null
       },
       qr_payload: log.qr_payload || null
     });
@@ -85,8 +102,103 @@ router.get('/verify/:certificateId', async (req, res, next) => {
   }
 });
 
+// ── POST /api/public/request-otp ─────────────────────────────────────────────
+// Citizen requests OTP before filing a complaint
+router.post('/request-otp', async (req, res, next) => {
+  try {
+    const { name, phone } = req.body;
+    const cleanPhone = normalizePhone(phone);
+
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit mobile number' });
+    }
+
+    if (!name || String(name).trim().length < 2) {
+      return res.status(400).json({ error: 'Please enter your full name' });
+    }
+
+    const demoActive = isDemoMode();
+    const otp = generateOtp(demoActive);
+    const otpExpiry = getOtpExpiry(10);
+    const db = getDb();
+
+    // Store in citizen_otps collection
+    await db.collection('citizen_otps').updateOne(
+      { phone: cleanPhone },
+      {
+        $set: {
+          phone: cleanPhone,
+          name: String(name).trim(),
+          otp: otp,
+          otp_expires_at: otpExpiry,
+          is_verified: false,
+          updated_at: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
+    await sendOtp(cleanPhone, otp, demoActive);
+
+    const maskedPhone = cleanPhone.length >= 4
+      ? '*'.repeat(cleanPhone.length - 4) + cleanPhone.slice(-4)
+      : cleanPhone;
+
+    res.json({
+      message: `OTP sent successfully to ${maskedPhone}`,
+      phone_masked: maskedPhone,
+      phone: cleanPhone,
+      ...(demoActive ? { dev_otp: '123456', demo_mode: true } : {}),
+      ...(process.env.OTP_DEBUG === 'true' ? { dev_otp: otp, debug_mode: true } : {})
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/public/verify-otp ──────────────────────────────────────────────
+// Verify citizen mobile OTP
+router.post('/verify-otp', async (req, res, next) => {
+  try {
+    const { phone, otp } = req.body;
+    const cleanPhone = normalizePhone(phone);
+    const cleanOtp = String(otp || '').trim();
+
+    if (!cleanPhone || !cleanOtp) {
+      return res.status(400).json({ error: 'Mobile number and OTP are required' });
+    }
+
+    const db = getDb();
+    const record = await db.collection('citizen_otps').findOne({ phone: cleanPhone });
+
+    const demoActive = isDemoMode();
+    const isDemoMatch = demoActive && cleanOtp === '123456';
+    const isRecordMatch = record && String(record.otp).trim() === cleanOtp;
+
+    if (!isDemoMatch && !isRecordMatch) {
+      return res.status(400).json({ error: 'Invalid OTP code. Please try again.' });
+    }
+
+    if (!demoActive && record?.otp_expires_at && new Date() > new Date(record.otp_expires_at)) {
+      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    await db.collection('citizen_otps').updateOne(
+      { phone: cleanPhone },
+      { $set: { is_verified: true, verified_at: new Date() } }
+    );
+
+    res.json({
+      success: true,
+      message: 'Mobile number verified successfully'
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── POST /api/public/complaints ──────────────────────────────────────────────
-// Unauthenticated complaint from the public verification page
+// Complaint filed by citizen after OTP verification
 router.post('/complaints', async (req, res, next) => {
   try {
     const {
@@ -94,28 +206,43 @@ router.post('/complaints', async (req, res, next) => {
       certificate_id,
       instrumentId,
       instrument_id,
+      vendorId,
+      citizen_name,
+      citizen_phone,
+      otp,
       category,
-      description,
-      evidenceUrl,
-      evidence_url
+      description
     } = req.body;
 
     const certRef = (certificateId || certificate_id || '').trim();
     const instRef = (instrumentId || instrument_id || '').trim();
+    const cleanPhone = normalizePhone(citizen_phone);
+    const cleanName = String(citizen_name || '').trim();
 
-    if (!certRef && !instRef) {
-      return res.status(400).json({ error: 'Either certificateId or instrumentId must be referenced' });
+    if (!cleanName || !cleanPhone || cleanPhone.length !== 10) {
+      return res.status(400).json({ error: 'Customer Name and 10-digit Mobile number are required' });
     }
 
     if (!category || !description) {
-      return res.status(400).json({ error: 'Complaint category and description are required' });
+      return res.status(400).json({ error: 'Complaint reason and description are required' });
     }
 
     const db = getDb();
+
+    // Verify OTP status
+    const demoActive = isDemoMode();
+    const citizenRecord = await db.collection('citizen_otps').findOne({ phone: cleanPhone });
+    const isVerifiedAlready = citizenRecord?.is_verified === true;
+    const isDirectOtpMatch = demoActive && String(otp).trim() === '123456';
+    const isStoredOtpMatch = citizenRecord && String(citizenRecord.otp).trim() === String(otp).trim();
+
+    if (!isVerifiedAlready && !isDirectOtpMatch && !isStoredOtpMatch) {
+      return res.status(400).json({ error: 'Mobile number must be verified with OTP before filing a complaint' });
+    }
+
     let log = null;
     let instrument = null;
 
-    // Validate certificate if provided
     if (certRef) {
       log = await db.collection('verification_logs').findOne({
         $or: [
@@ -127,7 +254,6 @@ router.post('/complaints', async (req, res, next) => {
       });
     }
 
-    // Validate instrument if provided or derived from log
     const targetInstId = instRef || (log ? (log.instrument_id || log.instrumentId) : null);
     if (targetInstId) {
       instrument = await db.collection('instruments').findOne({
@@ -135,27 +261,22 @@ router.post('/complaints', async (req, res, next) => {
       });
     }
 
-    // Ensure at least one referenced record exists in the system
-    if (!log && !instrument) {
-      return res.status(404).json({
-        error: 'Referenced certificate or instrument was not found in the Legal Metrology registry'
-      });
-    }
-
-    const vendorId = instrument?.vendor_id || null;
-    const inspectorId = log?.inspector_id || log?.inspectorId || null;
+    const finalVendorId = vendorId || instrument?.vendor_id || log?.vendor_id || null;
+    const finalInspectorId = log?.inspector_id || log?.inspectorId || null;
 
     const newComplaint = {
       id: `cmp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       type: 'PUBLIC_ABOUT_INSTRUMENT',
-      vendorId: vendorId,
-      inspectorId: inspectorId,
-      instrumentId: instrument?.id || null,
-      certificateId: log?.certificate_no || log?.id || certRef || null,
+      vendorId: finalVendorId,
+      inspectorId: finalInspectorId,
+      instrumentId: instrument?.id || targetInstId || null,
+      certificateId: log?.certificate_no || certRef || null,
       appointmentId: log?.appointment_id || null,
+      complainant_name: cleanName,
+      complainant_phone: cleanPhone,
+      complainant_verified: true,
       category: String(category).trim(),
       description: String(description).trim(),
-      evidenceUrl: evidenceUrl || evidence_url || null,
       status: 'OPEN',
       adminNotes: null,
       createdAt: new Date(),
@@ -165,7 +286,7 @@ router.post('/complaints', async (req, res, next) => {
     await db.collection('complaints').insertOne(newComplaint);
 
     res.status(201).json({
-      message: 'Public complaint filed successfully. Legal Metrology Department will review this report.',
+      message: 'Complaint submitted successfully! Your report has been dispatched to the Legal Metrology Department.',
       complaint_id: newComplaint.id,
       status: newComplaint.status
     });
