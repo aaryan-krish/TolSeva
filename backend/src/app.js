@@ -49,12 +49,16 @@ app.use('/api/inspector', require('./routes/inspector'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/bot', require('./routes/bot'));
 
+const { isDevMode } = require('./utils/otp');
+
 // Health check
 app.get('/api/health', (req, res) => {
+  const devActive = isDevMode();
   res.json({
     status: 'ok',
     message: 'TolSeva API is running',
-    demo_mode: process.env.DEMO_MODE !== 'false',
+    dev_mode: devActive,
+    demo_mode: devActive,
     timestamp: new Date().toISOString()
   });
 });

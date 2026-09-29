@@ -306,9 +306,30 @@ export default function VoiceChatbot() {
   const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
+  const accumulatedRef = useRef('')
+  const silenceTimerRef = useRef(null)
+  const isListeningRef = useRef(false)
 
   const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
   const supported = !!SpeechRecognition
+
+  // Helper to completely stop speech recognition and clear timers
+  const stopListening = useCallback(() => {
+    isListeningRef.current = false
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort()
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null
+    }
+    setListening(false)
+  }, [])
 
   // React immediately whenever user changes the portal language
   useEffect(() => {
@@ -320,6 +341,7 @@ export default function VoiceChatbot() {
     // Cancel any active speech when language switches
     synthRef.current?.cancel()
     setActiveSpeechIdx(null)
+    stopListening()
 
     setMessages(prev => {
       // If conversation hasn't really started yet, update initial greeting to the newly chosen language
@@ -342,7 +364,7 @@ export default function VoiceChatbot() {
         }
       ]
     })
-  }, [language])
+  }, [language, stopListening])
 
   useEffect(() => {
     if (open) {
@@ -357,7 +379,11 @@ export default function VoiceChatbot() {
     }
   }, [open])
 
+  // Speak bot response using speech synthesis (ensuring microphone is OFF so it never listens to itself)
   const speak = useCallback((text, messageIdx = null) => {
+    // 1. Terminate speech recognition immediately to prevent feedback loop!
+    stopListening()
+
     if (!ttsEnabled || !synthRef.current) return
     synthRef.current.cancel()
 
@@ -371,18 +397,29 @@ export default function VoiceChatbot() {
 
     if (messageIdx !== null) {
       setActiveSpeechIdx(messageIdx)
-      utter.onend = () => setActiveSpeechIdx(null)
-      utter.onerror = () => setActiveSpeechIdx(null)
+    }
+
+    utter.onend = () => {
+      setActiveSpeechIdx(null)
+    }
+    utter.onerror = () => {
+      setActiveSpeechIdx(null)
     }
 
     synthRef.current.speak(utter)
-  }, [ttsEnabled, currentLangObj])
+  }, [ttsEnabled, currentLangObj, stopListening])
 
   async function sendMessage(textToSend) {
     const text = (textToSend || input).trim()
     if (!text || loading) return
 
+    // Immediately stop mic and cancel ongoing TTS
+    stopListening()
+    synthRef.current?.cancel()
+    setActiveSpeechIdx(null)
+
     setInput('')
+    accumulatedRef.current = ''
     setError('')
     const newMessages = [...messages, { role: 'user', text }]
     setMessages(newMessages)
@@ -401,6 +438,9 @@ export default function VoiceChatbot() {
 
       const updated = [...newMessages, { role: 'bot', text: reply, source }]
       setMessages(updated)
+
+      // Guarantee microphone is off before starting speech synthesis
+      stopListening()
       speak(reply, updated.length - 1)
     } catch (err) {
       console.error('Chat Wizard request error:', err)
@@ -417,6 +457,7 @@ export default function VoiceChatbot() {
   function handleResetChat() {
     synthRef.current?.cancel()
     setActiveSpeechIdx(null)
+    stopListening()
     const langData = LOCALIZED_DATA[language] || LOCALIZED_DATA.en
     setMessages([{
       role: 'bot',
@@ -446,52 +487,111 @@ export default function VoiceChatbot() {
       setError('Voice recognition is not supported in this browser. Please type your query.')
       return
     }
-    setError('')
+
+    // Stop and cancel any active bot TTS audio before opening microphone!
     synthRef.current?.cancel()
     setActiveSpeechIdx(null)
+    stopListening()
 
-    try {
-      const recognition = new SpeechRecognition()
-      // Adapts speech recognition to current active portal language
-      recognition.lang = currentLangObj?.speechCode || 'en-IN'
-      recognition.interimResults = false
-      recognition.maxAlternatives = 1
+    setError('')
+    accumulatedRef.current = ''
+    setInput('')
 
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript
-        if (transcript) {
-          setInput(transcript)
-          sendMessage(transcript)
+    // Delay 200ms to flush any lingering speaker audio from output buffer
+    setTimeout(() => {
+      try {
+        const recognition = new SpeechRecognition()
+        recognition.lang = currentLangObj?.speechCode || 'en-IN'
+        // continuous = true lets the user speak their entire sentence without cutting off prematurely
+        recognition.continuous = true
+        // interimResults = true gives real-time visual feedback in the input box
+        recognition.interimResults = true
+        recognition.maxAlternatives = 1
+
+        recognition.onresult = (e) => {
+          let interimText = ''
+          let finalText = ''
+
+          for (let i = 0; i < e.results.length; i++) {
+            const part = e.results[i][0]?.transcript || ''
+            if (e.results[i].isFinal) {
+              finalText += (finalText ? ' ' : '') + part.trim()
+            } else {
+              interimText += (interimText ? ' ' : '') + part.trim()
+            }
+          }
+
+          const combined = (finalText + (interimText ? ' ' + interimText : '')).trim()
+          accumulatedRef.current = combined
+          setInput(combined)
+
+          // Reset silence timer on every speech packet received
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current)
+          }
+
+          // Give a generous 1800ms silence threshold before auto-sending the full sentence
+          silenceTimerRef.current = setTimeout(() => {
+            const toSend = accumulatedRef.current.trim()
+            if (toSend) {
+              stopListening()
+              sendMessage(toSend)
+            }
+          }, 1800)
         }
-      }
 
-      recognition.onerror = (e) => {
-        if (e.error !== 'no-speech') {
-          setError(`Voice input note: ${e.error}. You can also type your message.`)
+        recognition.onerror = (e) => {
+          if (e.error !== 'no-speech' && e.error !== 'aborted') {
+            console.warn('Speech recognition notice:', e.error)
+            setError(`Voice input notice: ${e.error}. You can also type your query.`)
+          }
+          if (e.error !== 'no-speech') {
+            stopListening()
+          }
         }
-        setListening(false)
-      }
 
-      recognition.onend = () => {
-        setListening(false)
-      }
+        recognition.onend = () => {
+          // If mic ended naturally and user had spoken something, send if silence timer expires
+          if (isListeningRef.current) {
+            const toSend = accumulatedRef.current.trim()
+            if (toSend && !loading) {
+              stopListening()
+              sendMessage(toSend)
+            } else {
+              stopListening()
+            }
+          } else {
+            setListening(false)
+          }
+        }
 
-      recognitionRef.current = recognition
-      recognition.start()
-      setListening(true)
-    } catch (err) {
-      console.error('Voice recognition error:', err)
-      setListening(false)
+        recognitionRef.current = recognition
+        isListeningRef.current = true
+        recognition.start()
+        setListening(true)
+      } catch (err) {
+        console.error('Voice recognition start error:', err)
+        stopListening()
+      }
+    }, 200)
+  }
+
+  function handleStopListeningAndSend() {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+    const toSend = (accumulatedRef.current || input).trim()
+    stopListening()
+    if (toSend) {
+      sendMessage(toSend)
     }
   }
 
-  function stopListening() {
-    try {
-      recognitionRef.current?.stop()
-    } catch {
-      // ignore
-    }
-    setListening(false)
+  function handleCancelListening() {
+    stopListening()
+    setInput('')
+    accumulatedRef.current = ''
   }
 
   function handleClose() {
@@ -597,7 +697,7 @@ export default function VoiceChatbot() {
                     {!isUser && (
                       <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100 text-[11px] text-gray-400">
                         <span className="flex items-center gap-1 font-medium text-[10px] text-orange-700/80 uppercase">
-                          {msg.source === 'gemini-3.8-flash' ? '✨ Gemini AI' : '⚖️ Legal Metrology AI'}
+                          {msg.source?.startsWith('gemini') ? '✨ Gemini AI' : '⚖️ Legal Metrology AI'}
                         </span>
                         <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
@@ -681,17 +781,34 @@ export default function VoiceChatbot() {
 
           {/* Listening Overlay Status */}
           {listening && (
-            <div className="bg-amber-50 border-t border-amber-200 px-4 py-2 flex items-center justify-between text-xs text-amber-900">
+            <div className="bg-amber-50/95 border-t border-amber-200 px-4 py-2.5 flex items-center justify-between text-xs text-amber-900 shadow-inner">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                <span className="font-semibold">{currentLangData.listening}</span>
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+                <div>
+                  <span className="font-semibold text-amber-950">{currentLangData.listening}</span>
+                  <span className="hidden sm:inline text-[11px] text-amber-700 ml-1.5">(pausing 1.8s auto-sends)</span>
+                </div>
               </div>
-              <button
-                onClick={stopListening}
-                className="text-xs text-red-600 hover:underline font-bold"
-              >
-                Stop
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleStopListeningAndSend}
+                  disabled={!input.trim()}
+                  className="px-2.5 py-1 rounded-full bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-semibold text-xs shadow-xs transition-colors"
+                >
+                  Done &amp; Send
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelListening}
+                  className="text-xs text-gray-500 hover:text-red-600 font-medium px-1"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
@@ -717,13 +834,14 @@ export default function VoiceChatbot() {
               {supported && (
                 <button
                   type="button"
-                  onClick={listening ? stopListening : startListening}
+                  disabled={loading}
+                  onClick={listening ? handleStopListeningAndSend : startListening}
                   className={`p-2.5 rounded-full transition-all flex items-center justify-center flex-shrink-0 ${
                     listening
                       ? 'bg-red-500 text-white ring-4 ring-red-200 animate-pulse'
-                      : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-700 disabled:opacity-40'
                   }`}
-                  title={listening ? 'Stop listening' : currentLangData.micHint}
+                  title={listening ? 'Click to finish and send' : currentLangData.micHint}
                 >
                   {listening ? <MicOff size={18} /> : <Mic size={18} />}
                 </button>

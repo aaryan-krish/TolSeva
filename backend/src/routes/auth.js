@@ -50,8 +50,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
     }
 
     // 3. Generate and store OTP (with expiry)
-    const localDemoOtp = isDemoMode() && isLocalRequest(req);
-    const otp = generateOtp(localDemoOtp);
+    const demoActive = isDemoMode();
+    const otp = generateOtp(demoActive);
     const otpExpiry = getOtpExpiry(10);
 
     await db.collection('vendors').updateOne(
@@ -63,8 +63,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
       [otp, otpExpiry, vendor.id]
     );
 
-    // 4. Dispatch SMS or log in demo mode
-    await sendOtp(cleanPhone, otp, localDemoOtp);
+    // 4. Dispatch SMS (real SMS gateway if dev mode is off, or simulated in demo mode)
+    const smsResult = await sendOtp(cleanPhone, otp, demoActive);
 
     const maskedPhone = cleanPhone.length >= 4
       ? '*'.repeat(cleanPhone.length - 4) + cleanPhone.slice(-4)
@@ -74,7 +74,8 @@ router.post('/vendor/request-otp', async (req, res, next) => {
       message: `OTP sent successfully to registered mobile ending in ${maskedPhone.slice(-4)}`,
       phone_masked: maskedPhone,
       gstin: cleanGstin,
-      ...(localDemoOtp ? { dev_otp: '123456', demo_mode: true } : {}),
+      provider: smsResult?.provider || (demoActive ? 'demo' : 'sms'),
+      ...(demoActive ? { dev_otp: '123456', dev_mode: true, demo_mode: true } : {}),
       ...(process.env.OTP_DEBUG === 'true' ? { dev_otp: otp, debug_mode: true } : {})
     });
   } catch (err) {
@@ -115,7 +116,7 @@ router.post('/vendor/verify-otp', async (req, res, next) => {
     }
 
     // Validate OTP (with DEMO_MODE fixed OTP bypass)
-    const demoActive = isDemoMode() && isLocalRequest(req);
+    const demoActive = isDemoMode();
     const isDemoOtp = demoActive && cleanOtp === '123456';
     const isStoredOtpValid = vendor.otp && String(vendor.otp).trim() === cleanOtp;
 
@@ -282,7 +283,8 @@ router.post('/reset-password/request-otp', async (req, res, next) => {
       phone = user.phone || '9876500000';
     }
 
-    const otp = generateOtp();
+    const demoActive = isDemoMode();
+    const otp = generateOtp(demoActive);
     const otpExpiry = getOtpExpiry(10);
 
     if (role === 'inspector') {
@@ -297,7 +299,7 @@ router.post('/reset-password/request-otp', async (req, res, next) => {
       );
     }
 
-    await sendOtp(phone, otp);
+    const smsResult = await sendOtp(phone, otp, demoActive);
 
     const maskedPhone = phone.length >= 4 
       ? '*'.repeat(Math.max(0, phone.length - 4)) + phone.slice(-4)
@@ -308,8 +310,9 @@ router.post('/reset-password/request-otp', async (req, res, next) => {
       phone_masked: maskedPhone,
       role,
       identifier: identifier.trim(),
-      dev_otp: isDemoMode() ? '123456' : otp,
-      demo_mode: isDemoMode()
+      provider: smsResult?.provider || (demoActive ? 'demo' : 'sms'),
+      ...(demoActive ? { dev_otp: '123456', dev_mode: true, demo_mode: true } : {}),
+      ...(process.env.OTP_DEBUG === 'true' ? { dev_otp: otp, debug_mode: true } : {})
     });
   } catch (err) {
     next(err);
@@ -352,7 +355,11 @@ router.post('/reset-password/verify', async (req, res, next) => {
     const isStoredOtpValid = user.otp && String(user.otp).trim() === String(otp).trim();
 
     if (!isDemoOtp && !isStoredOtpValid) {
-      return res.status(401).json({ error: 'Invalid or incorrect OTP. Please enter code 123456 or check your phone.' });
+      return res.status(401).json({
+        error: demoActive
+          ? 'Invalid or incorrect OTP. Please enter code 123456 or check your phone.'
+          : 'Invalid or incorrect OTP. Please enter the verification code sent to your phone.'
+      });
     }
 
     if (!demoActive && user.otp_expires_at && new Date() > new Date(user.otp_expires_at)) {

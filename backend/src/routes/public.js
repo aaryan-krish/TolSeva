@@ -138,7 +138,7 @@ router.post('/request-otp', async (req, res, next) => {
       { upsert: true }
     );
 
-    await sendOtp(cleanPhone, otp, demoActive);
+    const smsResult = await sendOtp(cleanPhone, otp, demoActive);
 
     const maskedPhone = cleanPhone.length >= 4
       ? '*'.repeat(cleanPhone.length - 4) + cleanPhone.slice(-4)
@@ -148,7 +148,8 @@ router.post('/request-otp', async (req, res, next) => {
       message: `OTP sent successfully to ${maskedPhone}`,
       phone_masked: maskedPhone,
       phone: cleanPhone,
-      ...(demoActive ? { dev_otp: '123456', demo_mode: true } : {}),
+      provider: smsResult?.provider || (demoActive ? 'demo' : 'sms'),
+      ...(demoActive ? { dev_otp: '123456', dev_mode: true, demo_mode: true } : {}),
       ...(process.env.OTP_DEBUG === 'true' ? { dev_otp: otp, debug_mode: true } : {})
     });
   } catch (err) {

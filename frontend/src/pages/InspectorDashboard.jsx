@@ -30,6 +30,7 @@ import {
 } from '../services/api.js'
 import VisitList from '../components/inspector/VisitList.jsx'
 import VerifyModal from '../components/inspector/VerifyModal.jsx'
+import ProfileMenu from '../components/profile/ProfileMenu.jsx'
 
 export default function InspectorDashboard() {
   const { auth, logout } = useAuth()
@@ -189,12 +190,7 @@ export default function InspectorDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => { logout(); navigate('/') }}
-              className="flex items-center gap-2 text-xs sm:text-sm border border-white/30 rounded-md px-3 py-2 hover:bg-white/10 transition-colors"
-            >
-              <LogOut size={16} /> <span className="hidden sm:inline">Logout</span>
-            </button>
+            <ProfileMenu variant="banner" />
           </div>
         </div>
       </div>

@@ -1,6 +1,20 @@
+const dns = require('dns');
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {}
+
 const express = require('express');
 const router = express.Router();
 const { GoogleGenAI } = require('@google/genai');
+
+// Candidate Gemini models with auto-fallback to ensure 100% availability
+const GEMINI_MODELS = [
+  'gemini-3.5-flash-lite',
+  'gemini-flash-latest',
+  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-lite-latest'
+];
 
 // System prompt grounding the AI as Chat Wizard
 const BASE_SYSTEM_INSTRUCTION = `You are "Chat Wizard", the intelligent, authoritative, and helpful AI Assistant for TolSeva — the National Legal Metrology Verification & Certification Platform under the Ministry of Consumer Affairs, Food & Public Distribution, Government of India.
@@ -433,27 +447,33 @@ Do NOT respond in English unless the selected language is English or the user ex
         parts: [{ text: `${userQuery}${languageDirective}` }]
       });
 
-      // Call Gemini 3.8 Flash model
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.6,
-        }
-      });
+      // Try candidate models in order to handle temporary model load/503 spikes seamlessly
+      for (const candidateModel of GEMINI_MODELS) {
+        try {
+          const response = await ai.models.generateContent({
+            model: candidateModel,
+            contents,
+            config: {
+              systemInstruction,
+              temperature: 0.7,
+            }
+          });
 
-      const reply = response.text;
-      if (reply && reply.trim()) {
-        return res.json({
-          reply: reply.trim(),
-          source: 'gemini-3.8-flash',
-          lang: targetLang,
-          timestamp: new Date().toISOString()
-        });
+          const reply = response.text;
+          if (reply && reply.trim()) {
+            return res.json({
+              reply: reply.trim(),
+              source: `gemini (${candidateModel})`,
+              lang: targetLang,
+              timestamp: new Date().toISOString()
+            });
+          }
+        } catch (modelErr) {
+          console.warn(`Model ${candidateModel} temporarily unavailable (${modelErr.message.substring(0, 100)}), trying next candidate...`);
+        }
       }
     } catch (err) {
-      console.warn('Gemini API call failed, falling back to Chat Wizard Knowledge Engine:', err.message);
+      console.warn('All Gemini AI model attempts failed, falling back to Chat Wizard Knowledge Engine:', err.message);
     }
   }
 
