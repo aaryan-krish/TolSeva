@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, X, LogIn, LogOut, User } from 'lucide-react'
+import { Menu, X, LogIn } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useLanguage } from '../../context/LanguageContext.jsx'
 import LoginModal from '../auth/LoginModal.jsx'
-import LanguageSelector from '../common/LanguageSelector.jsx'
 import ProfileMenu from '../profile/ProfileMenu.jsx'
 
 export default function Navbar() {
@@ -43,11 +42,6 @@ export default function Navbar() {
                 </>
               )}
 
-              {/* Language Selector in Navbar */}
-              <div className="border-l pl-4 border-gray-200">
-                <LanguageSelector variant="navbar" />
-              </div>
-
               {auth ? (
                 <ProfileMenu variant="navbar" />
               ) : (
@@ -57,9 +51,8 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile Actions: Language + Hamburger */}
+            {/* Mobile Actions */}
             <div className="flex items-center gap-2 md:hidden">
-              <LanguageSelector variant="navbar" />
               {auth && <ProfileMenu variant="navbar" />}
               <button className="p-2 text-gray-700" onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu">
                 {menuOpen ? <X size={24} /> : <Menu size={24} />}
