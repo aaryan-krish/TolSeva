@@ -455,8 +455,18 @@ export default function LoginModal({ onClose }) {
                 </button>
               )}
               <div>
-                <label className="block text-sm font-semibold mb-1">Username *</label>
-                <input name="username" value={form.username} onChange={update} className="input-field" placeholder="admin" required />
+                <label className="block text-sm font-semibold mb-1">Username or Registered Mobile *</label>
+                <input
+                  name="username"
+                  value={form.username}
+                  onChange={update}
+                  className="input-field"
+                  placeholder="admin or 9876500000"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  required
+                />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">

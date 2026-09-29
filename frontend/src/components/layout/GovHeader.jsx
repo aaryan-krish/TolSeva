@@ -1,8 +1,15 @@
+import { Link } from 'react-router-dom'
 import { useLanguage } from '../../context/LanguageContext'
+import { useAuth } from '../../context/AuthContext'
 import LanguageSelector from '../common/LanguageSelector'
 
 export default function GovHeader() {
   const { t } = useLanguage()
+  const { auth } = useAuth()
+
+  const homeLink = auth?.role === 'vendor' ? '/vendor'
+    : auth?.role === 'inspector' ? '/inspector'
+    : auth?.role === 'admin' ? '/admin' : '/'
 
   return (
     <>
@@ -10,14 +17,20 @@ export default function GovHeader() {
       <header className="bg-orange-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center flex-shrink-0 p-1 shadow-md">
+            <Link
+              to={homeLink}
+              className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-full flex items-center justify-center flex-shrink-0 p-1 shadow-md hover:scale-105 transition-transform"
+              title="TolSeva Home / Dashboard"
+            >
               <img src="/logo.png" alt="TolSeva Logo" className="w-full h-full object-contain" />
-            </div>
+            </Link>
             <div>
               <p className="text-orange-200 text-[11px] sm:text-xs font-semibold uppercase tracking-widest">{t('ministry')}</p>
-              <h1 className="text-lg sm:text-2xl font-bold leading-tight mt-0.5">
-                {t('portalTitle')}
-              </h1>
+              <Link to={homeLink} className="hover:underline">
+                <h1 className="text-lg sm:text-2xl font-bold leading-tight mt-0.5">
+                  {t('portalTitle')}
+                </h1>
+              </Link>
               <p className="text-orange-100 text-xs sm:text-sm mt-0.5">{t('portalSubtitle')}</p>
             </div>
           </div>

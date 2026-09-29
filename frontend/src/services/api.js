@@ -49,6 +49,9 @@ export const bookAppointment = (data) => api.post('/vendor/appointments', data)
 export const getAssignedVisits = (filter) => api.get('/inspector/assigned-visits', { params: { filter } })
 export const submitVerification = (data) => api.post('/inspector/verify', data)
 export const getCertificate = (id) => api.get(`/inspector/certificate/${id}`)
+export const getInspectorHistory = () => api.get('/inspector/history')
+export const getInspectorComplaints = () => api.get('/inspector/complaints')
+export const createInspectorComplaint = (data) => api.post('/inspector/complaints', data)
 
 // Admin
 export const getAdminDashboard = () => api.get('/admin/dashboard')
@@ -70,6 +73,6 @@ export const submitPublicComplaint = (data) => api.post('/public/complaints', da
 export const trackPublicComplaint = (trackingId) => api.get(`/public/complaints/track/${encodeURIComponent(trackingId)}`)
 
 // Bot
-export const askBot = (query, lang = 'en') => api.post('/bot/assist', { query, lang })
+export const askBot = (query, lang = 'en', history = []) => api.post('/bot/assist', { query, lang, history })
 
 export default api

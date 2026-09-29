@@ -22,6 +22,11 @@ export default function Navbar() {
     : auth?.role === 'inspector' ? '/inspector'
     : auth?.role === 'admin' ? '/admin' : '/'
 
+  // When user is logged in, hide the redundant white navbar bar
+  if (auth) {
+    return null
+  }
+
   return (
     <>
       <nav className="bg-white border-b-2 border-orange-600 shadow-sm sticky top-0 z-40">

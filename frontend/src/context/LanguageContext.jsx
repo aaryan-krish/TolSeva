@@ -50,8 +50,8 @@ export const translations = {
     email: 'Email',
     selectLanguage: 'Select Language',
     quickLinks: 'Quick Links',
-    assistantTitle: 'TolSeva Assistant',
-    assistantSub: 'Voice & Text Support'
+    assistantTitle: 'Chat Wizard',
+    assistantSub: 'AI Legal Metrology Assistant'
   },
   hi: {
     govInitiative: 'भारत सरकार की एक पहल',
@@ -89,8 +89,8 @@ export const translations = {
     email: 'ईमेल',
     selectLanguage: 'भाषा चुनें',
     quickLinks: 'त्वरित लिंक',
-    assistantTitle: 'तोलसेवा सहायक',
-    assistantSub: 'आवाज व पाठ्य सहायता'
+    assistantTitle: 'चैट विज़ार्ड (Chat Wizard)',
+    assistantSub: 'एआई विधिक मापविज्ञान सहायक'
   },
   mr: {
     govInitiative: 'भारत सरकारचा उपक्रम',
@@ -128,8 +128,8 @@ export const translations = {
     email: 'ईमेल',
     selectLanguage: 'भाषा निवडा',
     quickLinks: 'महत्त्वाचे दुवे',
-    assistantTitle: 'तोलसेवा सहाय्यक',
-    assistantSub: 'व्हॉइस आणि मजकूर समर्थन'
+    assistantTitle: 'चॅट विझार्ड (Chat Wizard)',
+    assistantSub: 'एआय वैध मापनशास्त्र सहाय्यक'
   },
   bn: {
     govInitiative: 'ভারত সরকারের উদ্যোগ',
@@ -167,8 +167,8 @@ export const translations = {
     email: 'ইমেল',
     selectLanguage: 'ভাষা নির্বাচন করুন',
     quickLinks: 'প্রয়োজনীয় লিঙ্ক',
-    assistantTitle: 'তোলসেবা সহায়ক',
-    assistantSub: 'ভয়েস ও টেক্সট সহায়তা'
+    assistantTitle: 'চ্যাট উইজার্ড (Chat Wizard)',
+    assistantSub: 'এআই লিগ্যাল মেট্রোলজি সহায়ক'
   },
   ta: {
     govInitiative: 'இந்திய அரசு முயற்சி',
@@ -206,8 +206,8 @@ export const translations = {
     email: 'மின்னஞ்சல்',
     selectLanguage: 'மொழியைத் தேர்ந்தெடுக்கவும்',
     quickLinks: 'முக்கிய இணைப்புகள்',
-    assistantTitle: 'டோல்சேவா உதவியாளர்',
-    assistantSub: 'குரல் மற்றும் உரை ஆதரவு'
+    assistantTitle: 'சாட் விசார்ட் (Chat Wizard)',
+    assistantSub: 'AI சட்ட அளவியல் உதவியாளர்'
   },
   te: {
     govInitiative: 'భారత ప్రభుత్వ చొరవ',
@@ -245,8 +245,8 @@ export const translations = {
     email: 'ఇమెయిల్',
     selectLanguage: 'భాషను ఎంచుకోండి',
     quickLinks: 'త్వరిత లింకులు',
-    assistantTitle: 'తోల్సేవ సహాయకుడు',
-    assistantSub: 'వాయిస్ మరియు టెక్స్ట్ మద్దతు'
+    assistantTitle: 'చాట్ విజార్డ్ (Chat Wizard)',
+    assistantSub: 'AI లీగల్ మెట్రాలజీ సహాయకుడు'
   },
   gu: {
     govInitiative: 'ભારત સરકારની પહેલ',
@@ -284,8 +284,8 @@ export const translations = {
     email: 'ઇમેઇલ',
     selectLanguage: 'ભાષા પસંદ કરો',
     quickLinks: 'ઝડપી લિંક્સ',
-    assistantTitle: 'તોલસેવા સહાયક',
-    assistantSub: 'વોઇસ અને ટેક્સ્ટ સપોર્ટ'
+    assistantTitle: 'ચેટ વિઝાર્ડ (Chat Wizard)',
+    assistantSub: 'એઆઈ લીગલ મેટ્રોલોજી સહાયક'
   },
   kn: {
     govInitiative: 'ಭಾರತ ಸರ್ಕಾರದ ಉಪಕ್ರಮ',
@@ -323,8 +323,8 @@ export const translations = {
     email: 'ಇಮೇಲ್',
     selectLanguage: 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
     quickLinks: 'ತ್ವರಿತ ಲಿಂಕ್‌ಗಳು',
-    assistantTitle: 'ತೋಲ್‌ಸೇವಾ ಸಹಾಯಕ',
-    assistantSub: 'ಧ್ವನಿ ಮತ್ತು ಪಠ್ಯ ಬೆಂಬಲ'
+    assistantTitle: 'ಚಾಟ್ ವಿಝಾರ್ಡ್ (Chat Wizard)',
+    assistantSub: 'AI ಲೀಗಲ್ ಮೆಟ್ರಾಲಜಿ ಸಹಾಯಕ'
   },
   ml: {
     govInitiative: 'ഭാരത സർക്കാർ സംരംഭം',
@@ -362,8 +362,8 @@ export const translations = {
     email: 'ഇമെയിൽ',
     selectLanguage: 'ഭാഷ തിരഞ്ഞെടുക്കുക',
     quickLinks: 'പ്രധാന ലിങ്കുകൾ',
-    assistantTitle: 'തോൽസേവ സഹായി',
-    assistantSub: 'ശബ്ദ, വാചക പിന്തുണ'
+    assistantTitle: 'ചാറ്റ് വിസാർഡ് (Chat Wizard)',
+    assistantSub: 'AI ലീഗൽ മെട്രോളജി സഹായി'
   },
   pa: {
     govInitiative: 'ਭਾਰਤ ਸਰਕਾਰ ਦੀ ਪਹਿਲਕਦਮੀ',
@@ -401,8 +401,8 @@ export const translations = {
     email: 'ਈਮੇਲ',
     selectLanguage: 'ਭਾਸ਼ਾ ਚੁਣੋ',
     quickLinks: 'ਜ਼ਰੂਰੀ ਲਿੰਕ',
-    assistantTitle: 'ਤੋਲਸੇਵਾ ਸਹਾਇਕ',
-    assistantSub: 'ਆਵਾਜ਼ ਅਤੇ ਟੈਕਸਟ ਸਹਾਇਤਾ'
+    assistantTitle: 'ਚੈਟ ਵਿਜ਼ਾਰਡ (Chat Wizard)',
+    assistantSub: 'AI ਲੀਗਲ ਮੈਟ੍ਰੋਲੋਜੀ ਸਹਾਇਕ'
   }
 };
 

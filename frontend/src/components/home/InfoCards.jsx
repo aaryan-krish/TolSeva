@@ -6,7 +6,7 @@ const cards = [
   { icon: Calendar, title: 'Annual Renewal', desc: 'Verification certificates expire annually. TolSeva automatically tracks expiry dates and notifies vendors 90 days in advance.', color: 'bg-amber-50 text-amber-800', border: 'border-amber-200' },
   { icon: ShieldCheck, title: 'Digital Certificates', desc: 'Inspectors issue tamper-proof digital certificates with QR codes that can be verified instantly by authorities and consumers.', color: 'bg-blue-50 text-blue-800', border: 'border-blue-200' },
   { icon: BookOpen, title: 'Penalties for Non-Compliance', desc: 'Under Section 25, using un-verified instruments can result in fines up to ₹25,000 and/or 1 year imprisonment.', color: 'bg-red-50 text-red-800', border: 'border-red-200' },
-  { icon: Phone, title: '24×7 Citizen Support', desc: 'The TolSeva voice chatbot and helpline assist non-tech-savvy vendors in Hindi and English with registration and renewals.', color: 'bg-emerald-50 text-emerald-800', border: 'border-emerald-200' }
+  { icon: Phone, title: 'Chat Wizard & 24×7 Support', desc: 'Chat Wizard AI assistant and toll-free helpline assist vendors and citizens in multiple Indian languages with instant answers, registration, and renewals.', color: 'bg-emerald-50 text-emerald-800', border: 'border-emerald-200' }
 ]
 
 export default function InfoCards() {

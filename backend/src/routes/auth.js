@@ -210,12 +210,30 @@ router.post('/admin/login', async (req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password are required' });
 
-    const result = await query('SELECT * FROM admins WHERE username = $1', [username.trim()]);
-    const admin = result.rows[0];
-    if (!admin) return res.status(401).json({ error: 'Invalid credentials' });
+    const cleanInput = String(username).trim();
+    const escapedInput = cleanInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cleanDigits = cleanInput.replace(/\D/g, '').slice(-10);
 
-    const isValid = await bcrypt.compare(password, admin.password_hash);
-    if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
+    const conditions = [
+      { username: new RegExp(`^${escapedInput}$`, 'i') }
+    ];
+    if (cleanDigits.length === 10) {
+      conditions.push({ phone: cleanDigits });
+      conditions.push({ phone: `+91${cleanDigits}` });
+    }
+
+    const db = getDb();
+    let admin = await db.collection('admins').findOne({ $or: conditions });
+
+    if (!admin) {
+      const result = await query('SELECT * FROM admins WHERE username = $1', [cleanInput]);
+      admin = result.rows[0];
+    }
+
+    if (!admin) return res.status(401).json({ error: 'Invalid credentials. Username not found.' });
+
+    const isValid = await bcrypt.compare(String(password).trim(), admin.password_hash);
+    if (!isValid) return res.status(401).json({ error: 'Invalid credentials. Password does not match.' });
 
     const token = signToken({ id: admin.id, role: 'admin', username: admin.username, name: admin.full_name });
     res.json({ message: 'Login successful', token, admin: { id: admin.id, username: admin.username, full_name: admin.full_name } });

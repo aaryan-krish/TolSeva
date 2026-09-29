@@ -46,32 +46,56 @@ router.get('/vendors', adminAuth, async (req, res, next) => {
 
     let vendors = [];
     if (gstin && gstin.trim()) {
-      const searchGstin = gstin.trim().toUpperCase();
+      const searchGstin = gstin.trim();
+      const searchRegex = new RegExp(searchGstin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       vendors = await db.collection('vendors').find({
-        gstin: new RegExp(searchGstin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+        $or: [
+          { gstin: searchRegex },
+          { business_name: searchRegex },
+          { owner_name: searchRegex },
+          { id: searchRegex }
+        ]
       }).toArray();
     } else {
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 20;
+      const limit = parseInt(req.query.limit) || 50;
       const offset = (page - 1) * limit;
 
-      vendors = await db.collection('vendors').find({ is_verified: true })
+      vendors = await db.collection('vendors').find({})
         .sort({ created_at: -1 })
         .skip(offset)
         .limit(limit)
         .toArray();
     }
 
-    // Attach instrument counts
+    // Attach instrument counts and complaint statistics
     const enriched = await Promise.all(vendors.map(async v => {
-      const count = await db.collection('instruments').countDocuments({ vendor_id: v.id });
+      const [instrumentCount, vendorComplaints] = await Promise.all([
+        db.collection('instruments').countDocuments({ vendor_id: v.id }),
+        db.collection('complaints').find({
+          $or: [
+            { vendorId: v.id },
+            { targetId: v.id }
+          ]
+        }).sort({ createdAt: -1 }).toArray()
+      ]);
+
+      const openCount = vendorComplaints.filter(c => (c.status || 'OPEN').toUpperCase() === 'OPEN').length;
+      const investigatingCount = vendorComplaints.filter(c => (c.status || '').toUpperCase() === 'INVESTIGATING').length;
+      const resolvedCount = vendorComplaints.filter(c => (c.status || '').toUpperCase() === 'RESOLVED').length;
+
       return {
         ...v,
-        instrument_count: count
+        instrument_count: instrumentCount,
+        complaint_count: vendorComplaints.length,
+        open_complaints_count: openCount,
+        investigating_complaints_count: investigatingCount,
+        resolved_complaints_count: resolvedCount,
+        complaints: vendorComplaints
       };
     }));
 
-    const total = await db.collection('vendors').countDocuments(gstin ? {} : { is_verified: true });
+    const total = await db.collection('vendors').countDocuments({});
     res.json({ vendors: enriched, total });
   } catch (err) {
     next(err);
@@ -157,10 +181,20 @@ router.get('/vendors/:id', adminAuth, async (req, res, next) => {
 router.get('/inspectors', adminAuth, async (req, res, next) => {
   try {
     const db = getDb();
-    const searchGovId = String(req.query.gov_id || '').trim().toUpperCase();
-    const filter = searchGovId
-      ? { gov_id: new RegExp(searchGovId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
-      : {};
+    const searchParam = String(req.query.gov_id || req.query.search || '').trim();
+    let filter = {};
+    if (searchParam) {
+      const regex = new RegExp(searchParam.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter = {
+        $or: [
+          { gov_id: regex },
+          { full_name: regex },
+          { zone: regex },
+          { email: regex },
+          { id: regex }
+        ]
+      };
+    }
     const inspectors = await db.collection('inspectors').find(filter).sort({ full_name: 1 }).toArray();
     const sanitized = inspectors.map(ins => {
       const { password_hash, otp, otp_expires_at, ...safe } = ins;

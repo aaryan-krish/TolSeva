@@ -30,7 +30,7 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
     const appUrl = detectedBase.replace(/\/+$/, '');
 
     const enriched = await Promise.all(machines.map(async i => {
-      let expiryStatus = 'VALID';
+      let expiryStatus = i.status === 'PENDING' ? 'PENDING' : 'VALID';
       let daysUntilExpiry = null;
 
       if (i.expiry_date) {
@@ -47,6 +47,8 @@ router.get('/machines', vendorAuth, async (req, res, next) => {
         } else {
           expiryStatus = 'VALID';
         }
+      } else {
+        expiryStatus = i.status === 'PENDING' ? 'PENDING' : (i.expiry_status || 'PENDING');
       }
 
       const certificate = await db.collection('verification_logs').findOne(

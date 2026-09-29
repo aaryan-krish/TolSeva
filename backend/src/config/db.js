@@ -1,14 +1,39 @@
 const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
-const DEFAULT_MONGODB_URI = 'mongodb+srv://aaryankrish86_db_user:pjDGEo2K1jNTQe53@cluster0.rcmsnpf.mongodb.net/?retryWrites=true&w=majority';
 const DEFAULT_DB_NAME = 'tolseva';
 
 let client;
 let db;
 
 function getMongoUri() {
-  const rawUri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
-  return String(rawUri).trim().replace(/^["']|["']$/g, '');
+  let rawUri = process.env.MONGODB_URI;
+  if (!rawUri) return '';
+  rawUri = String(rawUri).trim().replace(/^["']|["']$/g, '');
+
+  // Safely auto-encode special characters in username/password if unencoded
+  try {
+    const match = rawUri.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):([^@]+)@(.+)$/);
+    if (match) {
+      const [, prefix, user, pass, rest] = match;
+      let decodedPass = pass;
+      try {
+        decodedPass = decodeURIComponent(pass);
+      } catch (_) {
+        decodedPass = pass;
+      }
+      const encodedPass = encodeURIComponent(decodedPass);
+      let decodedUser = user;
+      try {
+        decodedUser = decodeURIComponent(user);
+      } catch (_) {
+        decodedUser = user;
+      }
+      return `${prefix}${encodeURIComponent(decodedUser)}:${encodedPass}@${rest}`;
+    }
+  } catch (_) {}
+
+  return rawUri;
 }
 
 function getDatabaseName() {
@@ -98,7 +123,8 @@ async function query(text, params = []) {
       : normalized.includes('username = $1')
         ? 'username'
         : 'gstin';
-    const user = await collection.findOne({ [field]: params[0] });
+    const escapedParam = String(params[0] || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await collection.findOne({ [field]: new RegExp(`^${escapedParam}$`, 'i') });
     return { rows: user ? [user] : [], rowCount: user ? 1 : 0 };
   }
 

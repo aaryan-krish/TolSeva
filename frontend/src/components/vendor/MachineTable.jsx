@@ -4,6 +4,11 @@ import QRCode from 'qrcode'
 import CertificateModal from './CertificateModal.jsx'
 
 function ExpiryBadge({ status, daysUntilExpiry }) {
+  if (daysUntilExpiry === null || daysUntilExpiry === undefined || isNaN(daysUntilExpiry)) {
+    if (status === 'EXPIRED') return <span className='badge-expired'><XCircle size={12} className='mr-1' />Expired</span>
+    if (status === 'VALID') return <span className='badge-valid'><CheckCircle size={12} className='mr-1' />Valid</span>
+    return <span className='badge-pending'><Wrench size={12} className='mr-1' />Pending</span>
+  }
   if (status === 'EXPIRED' || daysUntilExpiry < 0) return <span className='badge-expired'><XCircle size={12} className='mr-1' />Expired</span>
   if (status === 'EXPIRING_SOON' || (daysUntilExpiry >= 0 && daysUntilExpiry <= 30)) return <span className='badge-expiring'><AlertTriangle size={12} className='mr-1' />Expiring in {daysUntilExpiry}d</span>
   if (status === 'APPROACHING' || (daysUntilExpiry > 30 && daysUntilExpiry <= 90)) return <span className='badge-approaching'><Clock size={12} className='mr-1' />Exp. in {daysUntilExpiry}d</span>

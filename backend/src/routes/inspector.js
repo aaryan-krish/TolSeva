@@ -191,4 +191,82 @@ router.get('/certificate/:id', inspectorAuth, async (req, res, next) => {
   }
 });
 
+// ── GET /api/inspector/history (Completed verifications by this inspector) ───
+router.get('/history', inspectorAuth, async (req, res, next) => {
+  try {
+    const db = getDb();
+    const logs = await db.collection('verification_logs').find({
+      $or: [{ inspector_id: req.user.id }, { inspectorId: req.user.id }]
+    }).sort({ verified_at: -1 }).limit(100).toArray();
+
+    const history = await Promise.all(logs.map(async (l) => {
+      const inst = l.instrument_id ? await db.collection('instruments').findOne({ id: l.instrument_id }) : null;
+      const vend = inst?.vendor_id ? await db.collection('vendors').findOne({ id: inst.vendor_id }) : null;
+      return {
+        ...l,
+        make: inst?.make || 'Scale',
+        model: inst?.model || 'Standard',
+        serial_no: inst?.serial_no || 'N/A',
+        instrument_type: inst?.instrument_type || 'Commercial Scale',
+        business_name: vend?.business_name || 'Registered Vendor',
+        city: vend?.city || ''
+      };
+    }));
+
+    res.json({ history, total: history.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /api/inspector/complaints (Complaints involving this inspector) ───────
+router.get('/complaints', inspectorAuth, async (req, res, next) => {
+  try {
+    const db = getDb();
+    const complaints = await db.collection('complaints').find({
+      $or: [{ inspectorId: req.user.id }, { inspector_id: req.user.id }]
+    }).sort({ createdAt: -1 }).toArray();
+
+    res.json({ complaints });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/inspector/complaints (Inspector reports vendor infraction) ──────
+router.post('/complaints', inspectorAuth, async (req, res, next) => {
+  try {
+    const { vendorId, vendor_id, instrumentId, instrument_id, category, description, evidenceUrl } = req.body;
+
+    if (!category || !description) {
+      return res.status(400).json({ error: 'Category and description are required' });
+    }
+
+    const db = getDb();
+    const newComplaint = {
+      id: `cmp-ins-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      type: 'INSPECTOR_REPORT_ON_VENDOR',
+      inspectorId: req.user.id,
+      vendorId: vendorId || vendor_id || null,
+      instrumentId: instrumentId || instrument_id || null,
+      category: String(category).trim(),
+      description: String(description).trim(),
+      evidenceUrl: evidenceUrl || null,
+      status: 'OPEN',
+      adminNotes: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await db.collection('complaints').insertOne(newComplaint);
+
+    res.status(201).json({
+      message: 'Violation report recorded and submitted for supervisory review.',
+      complaint: newComplaint
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

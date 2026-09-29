@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Crown, LogOut, Users, ShieldCheck, Calendar, BarChart3, Search, X, MessageSquareWarning } from 'lucide-react'
+import { Crown, LogOut, Users, ShieldCheck, Calendar, BarChart3, Search, X, MessageSquareWarning, AlertTriangle, ChevronDown, ChevronUp, Eye, Building2, Scale, ExternalLink, CheckCircle2, Clock, AlertOctagon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getAdminDashboard, getAdminVendors, getAdminInspectors, getAdminAppointments, assignInspector, getAdminComplaints, createAdminComplaint, updateAdminComplaint, getAdminVendorDetails } from '../services/api.js'
 import ProfileMenu from '../components/profile/ProfileMenu.jsx'
@@ -25,6 +25,10 @@ export default function AdminDashboard() {
   const [complaintSaving, setComplaintSaving] = useState(false)
   const [complaintDropdownOpen, setComplaintDropdownOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [vendorComplaintSearch, setVendorComplaintSearch] = useState('')
+  const [vendorComplaintFilter, setVendorComplaintFilter] = useState('with_complaints')
+  const [expandedVendorId, setExpandedVendorId] = useState(null)
+  const [vendorSort, setVendorSort] = useState('complaints_desc')
 
   if (!auth || auth.role !== 'admin') { navigate('/'); return null }
 
@@ -32,14 +36,14 @@ export default function AdminDashboard() {
     async function loadAll() {
       setLoading(true)
       try {
-        const [dashRes, vendRes, insRes, appRes, complaintRes] = await Promise.all([
+        const [dashRes, vendRes, insRes, appRes, complaintRes] = await Promise.allSettled([
           getAdminDashboard(), getAdminVendors(), getAdminInspectors(), getAdminAppointments(), getAdminComplaints()
         ])
-        setStats(dashRes.data.stats)
-        setVendors(vendRes.data.vendors)
-        setInspectors(insRes.data.inspectors)
-        setAppointments(appRes.data.appointments)
-        setComplaints(complaintRes.data.complaints)
+        if (dashRes.status === 'fulfilled') setStats(dashRes.value.data?.stats || null)
+        if (vendRes.status === 'fulfilled') setVendors(vendRes.value.data?.vendors || [])
+        if (insRes.status === 'fulfilled') setInspectors(insRes.value.data?.inspectors || [])
+        if (appRes.status === 'fulfilled') setAppointments(appRes.value.data?.appointments || [])
+        if (complaintRes.status === 'fulfilled') setComplaints(complaintRes.value.data?.complaints || [])
       } catch (e) { console.error(e) }
       finally { setLoading(false) }
     }
@@ -147,7 +151,19 @@ export default function AdminDashboard() {
   async function handleComplaintStatus(id, status) {
     try {
       const response = await updateAdminComplaint(id, { status })
-      setComplaints(current => current.map(complaint => complaint.id === id ? { ...complaint, ...response.data.complaint } : complaint))
+      const updated = response.data.complaint
+      setComplaints(current => current.map(complaint => complaint.id === id ? { ...complaint, ...updated } : complaint))
+      setVendors(current => current.map(v => {
+        if (!v.complaints || !v.complaints.some(c => c.id === id)) return v
+        const updatedComps = v.complaints.map(c => c.id === id ? { ...c, ...updated } : c)
+        return {
+          ...v,
+          complaints: updatedComps,
+          open_complaints_count: updatedComps.filter(c => (c.status || 'OPEN').toUpperCase() === 'OPEN').length,
+          investigating_complaints_count: updatedComps.filter(c => (c.status || '').toUpperCase() === 'INVESTIGATING').length,
+          resolved_complaints_count: updatedComps.filter(c => (c.status || '').toUpperCase() === 'RESOLVED').length
+        }
+      }))
     } catch (e) { console.error(e) }
   }
 
@@ -184,6 +200,19 @@ export default function AdminDashboard() {
             </button>
             <button onClick={() => setActiveTab('vendors')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendors' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors" : ""}>
               <Users size={18} /> {!sidebarCollapsed && <span>Vendors</span>}
+            </button>
+            <button onClick={() => setActiveTab('vendor_complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'vendor_complaints' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Vendors by Complaints" : ""}>
+              <AlertTriangle size={18} className="text-amber-600 shrink-0" />
+              {!sidebarCollapsed && (
+                <span className="flex items-center justify-between flex-1 truncate">
+                  <span>Vendor Complaints</span>
+                  {vendors.filter(v => (v.complaint_count || 0) > 0).length > 0 && (
+                    <span className="ml-1 bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                      {vendors.filter(v => (v.complaint_count || 0) > 0).length}
+                    </span>
+                  )}
+                </span>
+              )}
             </button>
             <button onClick={() => setActiveTab('complaints')} className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-start gap-2 px-4'} py-2.5 rounded-md text-sm font-semibold transition-colors ${activeTab === 'complaints' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`} title={sidebarCollapsed ? "Complaints" : ""}>
               <MessageSquareWarning size={18} /> {!sidebarCollapsed && <span>Complaints</span>}
@@ -293,6 +322,339 @@ export default function AdminDashboard() {
                   {vendors.length === 0 && <p className="text-center text-sm text-gray-500 py-8">No vendors found for this GSTIN.</p>}
                 </div>
               )}
+
+              {activeTab === 'vendor_complaints' && (() => {
+                const vendorsWithComplaints = vendors.filter(v => (v.complaint_count || 0) > 0)
+                const totalVendorComplaints = vendors.reduce((acc, v) => acc + (v.complaint_count || 0), 0)
+                const openVendorComplaints = vendors.reduce((acc, v) => acc + (v.open_complaints_count || 0), 0)
+                const highRiskVendors = vendors.filter(v => (v.complaint_count || 0) >= 2)
+                const cleanVendors = vendors.filter(v => (v.complaint_count || 0) === 0)
+
+                const filteredList = vendors
+                  .filter(v => {
+                    const q = vendorComplaintSearch.trim().toLowerCase()
+                    if (q) {
+                      const matchesName = (v.business_name || '').toLowerCase().includes(q)
+                      const matchesGstin = (v.gstin || '').toLowerCase().includes(q)
+                      const matchesOwner = (v.owner_name || '').toLowerCase().includes(q)
+                      const matchesCity = (v.city || '').toLowerCase().includes(q)
+                      if (!matchesName && !matchesGstin && !matchesOwner && !matchesCity) return false
+                    }
+                    const count = v.complaint_count || 0
+                    if (vendorComplaintFilter === 'with_complaints') return count > 0
+                    if (vendorComplaintFilter === 'high_risk') return count >= 2
+                    if (vendorComplaintFilter === 'clean') return count === 0
+                    return true
+                  })
+                  .sort((a, b) => {
+                    const countA = a.complaint_count || 0
+                    const countB = b.complaint_count || 0
+                    if (vendorSort === 'complaints_desc') return countB - countA
+                    if (vendorSort === 'complaints_asc') return countA - countB
+                    if (vendorSort === 'name_asc') return (a.business_name || '').localeCompare(b.business_name || '')
+                    return 0
+                  })
+
+                return (
+                  <div className="space-y-6">
+                    {/* Top Stats Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs">
+                        <div className="text-2xl mb-1">🏪</div>
+                        <div className="text-2xl font-extrabold text-gray-900">{vendors.length}</div>
+                        <div className="text-xs font-medium text-gray-500 mt-1">Total Registered Establishments</div>
+                      </div>
+
+                      <div className="bg-red-50/80 border border-red-200 rounded-xl p-5 shadow-xs">
+                        <div className="text-2xl mb-1">⚠️</div>
+                        <div className="text-2xl font-extrabold text-red-950">{vendorsWithComplaints.length}</div>
+                        <div className="text-xs font-semibold text-red-800 mt-1">Vendors with Complaints</div>
+                      </div>
+
+                      <div className="bg-orange-50/80 border border-orange-200 rounded-xl p-5 shadow-xs">
+                        <div className="text-2xl mb-1">📢</div>
+                        <div className="text-2xl font-extrabold text-orange-950">{totalVendorComplaints}</div>
+                        <div className="text-xs font-semibold text-orange-800 mt-1">Total Grievances Lodged</div>
+                      </div>
+
+                      <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-5 shadow-xs">
+                        <div className="text-2xl mb-1">⏳</div>
+                        <div className="text-2xl font-extrabold text-amber-950">{openVendorComplaints}</div>
+                        <div className="text-xs font-semibold text-amber-800 mt-1">Unresolved / Open Inquiries</div>
+                      </div>
+                    </div>
+
+                    {/* Table Container Card */}
+                    <div className="card overflow-x-auto">
+                      <div className="flex flex-col gap-4 mb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+                          <div>
+                            <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
+                              <AlertTriangle size={20} className="text-amber-600" />
+                              Vendors by Number of Complaints ({filteredList.length})
+                            </h2>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Establishments ranked by volume of consumer and field complaints, verification discrepancies, and equipment tampering.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-gray-500 font-medium">Sort by:</span>
+                            <select
+                              value={vendorSort}
+                              onChange={e => setVendorSort(e.target.value)}
+                              className="input-field text-xs py-1.5 px-2.5 max-w-[210px]"
+                            >
+                              <option value="complaints_desc">Most Complaints (Highest first)</option>
+                              <option value="complaints_asc">Least Complaints (Lowest first)</option>
+                              <option value="name_asc">Establishment Name (A to Z)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Filter Tabs & Search */}
+                        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => setVendorComplaintFilter('with_complaints')}
+                              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${
+                                vendorComplaintFilter === 'with_complaints'
+                                  ? 'bg-amber-600 text-white shadow-xs'
+                                  : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200'
+                              }`}
+                            >
+                              With Complaints ({vendorsWithComplaints.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVendorComplaintFilter('high_risk')}
+                              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1.5 ${
+                                vendorComplaintFilter === 'high_risk'
+                                  ? 'bg-red-600 text-white shadow-xs'
+                                  : 'bg-red-50 text-red-900 hover:bg-red-100 border border-red-200'
+                              }`}
+                            >
+                              High Risk (2+) ({highRiskVendors.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVendorComplaintFilter('all')}
+                              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                                vendorComplaintFilter === 'all'
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                              }`}
+                            >
+                              All Vendors ({vendors.length})
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVendorComplaintFilter('clean')}
+                              className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                                vendorComplaintFilter === 'clean'
+                                  ? 'bg-green-700 text-white shadow-xs'
+                                  : 'bg-green-50 text-green-900 hover:bg-green-100 border border-green-200'
+                              }`}
+                            >
+                              Clean Record ({cleanVendors.length})
+                            </button>
+                          </div>
+
+                          <div className="relative w-full lg:w-80">
+                            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <input
+                              type="text"
+                              value={vendorComplaintSearch}
+                              onChange={e => setVendorComplaintSearch(e.target.value)}
+                              placeholder="Search by vendor, GSTIN, city..."
+                              className="input-field pl-9 pr-8 text-xs py-2 w-full"
+                            />
+                            {vendorComplaintSearch && (
+                              <button
+                                type="button"
+                                onClick={() => setVendorComplaintSearch('')}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                              >
+                                <X size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Vendors with Complaints Table */}
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-700">
+                            <th className="px-4 py-3 text-left font-semibold">Vendor / Establishment</th>
+                            <th className="px-4 py-3 text-left font-semibold">Location</th>
+                            <th className="px-4 py-3 text-center font-semibold">Instruments</th>
+                            <th className="px-4 py-3 text-center font-semibold">Total Complaints</th>
+                            <th className="px-4 py-3 text-left font-semibold">Status Breakdown</th>
+                            <th className="px-4 py-3 text-right font-semibold">Grievances</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredList.map(v => {
+                            const count = v.complaint_count || 0
+                            const isExpanded = expandedVendorId === v.id
+                            const hasComplaints = count > 0
+
+                            return (
+                              <React.Fragment key={v.id}>
+                                <tr className={`hover:bg-gray-50 transition-colors ${hasComplaints ? 'bg-orange-50/25' : ''}`}>
+                                  <td className="px-4 py-3">
+                                    <div className="font-bold text-gray-900">{v.business_name}</div>
+                                    <div className="text-xs text-gray-500 font-mono mt-0.5">GSTIN: {v.gstin || 'Unregistered'}</div>
+                                    <div className="text-xs text-gray-600 mt-0.5">Owner: {v.owner_name} • {v.phone}</div>
+                                  </td>
+                                  <td className="px-4 py-3 text-xs text-gray-700">
+                                    <div>{v.city || 'N/A'}, {v.state || 'UP'}</div>
+                                    {v.address && <div className="text-gray-500 text-2xs truncate max-w-[180px]">{v.address}</div>}
+                                  </td>
+                                  <td className="px-4 py-3 text-center font-bold text-gray-800 text-xs">
+                                    <span className="bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
+                                      {v.instrument_count || 0}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {count >= 3 ? (
+                                      <span className="inline-flex items-center gap-1 bg-red-100 text-red-800 border border-red-300 px-2.5 py-1 rounded-full text-xs font-bold shadow-2xs">
+                                        <AlertOctagon size={13} /> {count} Complaints (High Risk)
+                                      </span>
+                                    ) : count > 0 ? (
+                                      <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-full text-xs font-bold shadow-2xs">
+                                        <AlertTriangle size={13} /> {count} Complaint{count > 1 ? 's' : ''}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 bg-green-100 text-green-800 border border-green-200 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                        <CheckCircle2 size={13} /> 0 (Clean)
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 text-xs">
+                                    {count > 0 ? (
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        {v.open_complaints_count > 0 && (
+                                          <span className="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-2xs font-bold">
+                                            {v.open_complaints_count} Open
+                                          </span>
+                                        )}
+                                        {v.investigating_complaints_count > 0 && (
+                                          <span className="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-2xs font-bold">
+                                            {v.investigating_complaints_count} Investigating
+                                          </span>
+                                        )}
+                                        {v.resolved_complaints_count > 0 && (
+                                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-2xs font-semibold">
+                                            {v.resolved_complaints_count} Resolved
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400 text-xs italic">No violations recorded</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 text-right">
+                                    {count > 0 ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => setExpandedVendorId(isExpanded ? null : v.id)}
+                                        className="btn-outline text-xs py-1 px-3 inline-flex items-center gap-1 bg-white hover:bg-gray-100 font-semibold text-gray-700 cursor-pointer shadow-2xs"
+                                      >
+                                        <Eye size={13} /> {isExpanded ? 'Hide' : 'View'} ({count})
+                                        {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                                      </button>
+                                    ) : (
+                                      <span className="text-gray-400 text-xs font-medium px-2">—</span>
+                                    )}
+                                  </td>
+                                </tr>
+
+                                {/* Expanded Complaints Row */}
+                                {isExpanded && (
+                                  <tr className="bg-gray-50/90 border-y border-gray-200">
+                                    <td colSpan={6} className="p-4 sm:p-5">
+                                      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-xs space-y-3">
+                                        <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                                          <h4 className="font-bold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <MessageSquareWarning size={15} className="text-orange-600" />
+                                            Complaints Filed Against: <span className="text-emerald-700">{v.business_name}</span> ({count})
+                                          </h4>
+                                          <span className="text-2xs text-gray-500 font-mono">Vendor ID: {v.id}</span>
+                                        </div>
+
+                                        <div className="space-y-2.5">
+                                          {(v.complaints || []).map(c => (
+                                            <div key={c.id} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                              <div className="space-y-1 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                  <span className="font-mono font-bold text-gray-900 text-2xs bg-white px-2 py-0.5 rounded border border-gray-200">
+                                                    {c.id}
+                                                  </span>
+                                                  <span className="font-bold text-slate-800">{c.category || 'Discrepancy'}</span>
+                                                  {c.type === 'PUBLIC_ABOUT_INSTRUMENT' && (
+                                                    <span className="text-2xs font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                                                      Citizen QR Report
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                <p className="text-slate-600 italic">"{c.description}"</p>
+                                                <div className="text-2xs text-gray-500 flex items-center gap-3">
+                                                  {c.complainant_name && <span>Reported by: <strong>{c.complainant_name}</strong></span>}
+                                                  {c.complainant_phone && <span>Mobile: <strong>+91 {c.complainant_phone}</strong></span>}
+                                                  <span>Date: {c.createdAt ? new Date(c.createdAt).toLocaleDateString('en-IN') : 'N/A'}</span>
+                                                </div>
+                                              </div>
+
+                                              <div className="flex items-center gap-2 shrink-0">
+                                                <span className="text-2xs text-gray-500 font-medium">Status:</span>
+                                                <select
+                                                  value={c.status}
+                                                  onChange={e => handleComplaintStatus(c.id, e.target.value)}
+                                                  className={`text-2xs font-bold py-1 px-2.5 rounded-lg border cursor-pointer ${
+                                                    c.status === 'RESOLVED'
+                                                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                                      : c.status === 'INVESTIGATING'
+                                                      ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                                      : 'bg-amber-50 text-amber-900 border-amber-300'
+                                                  }`}
+                                                >
+                                                  <option value="OPEN">OPEN</option>
+                                                  <option value="INVESTIGATING">INVESTIGATING</option>
+                                                  <option value="RESOLVED">RESOLVED</option>
+                                                </select>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+
+                      {filteredList.length === 0 && (
+                        <div className="text-center py-12 text-gray-500 text-sm">
+                          <p className="font-medium">No vendors match the selected filter criteria.</p>
+                          <button
+                            type="button"
+                            onClick={() => { setVendorComplaintFilter('all'); setVendorComplaintSearch(''); }}
+                            className="mt-2 text-xs text-emerald-600 font-semibold hover:underline"
+                          >
+                            Reset filters
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {activeTab === 'inspectors' && (
                 <div className="card overflow-x-auto">
