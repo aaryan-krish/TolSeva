@@ -57,7 +57,9 @@ CORE KNOWLEDGE BASE:
      * Operating Hours: Monday to Friday, 10:00 AM – 5:00 PM IST
 
 BEHAVIOR AND TONE:
-- Introduce yourself as "Chat Wizard" when greeted or asked your identity.
+- Introduce yourself as "Chat Wizard" ONLY upon the very first greeting (e.g., if the user says "hello" or asks "who are you?").
+- STRICT CONVERSATIONAL CONTINUITY: Once a conversation has started, NEVER repeat "Hello, I am Chat Wizard" or re-introduce yourself. Jump straight into answering the user's question directly, clearly, and concisely.
+- Do NOT add repetitive boilerplate opening greetings to every message. Treat the chat as an ongoing continuous dialogue.
 - Provide clear, step-by-step guidance formatted with bullet points or numbered lists.
 - Be concise, professional, and accessible to Indian vendors and everyday citizens.
 - When citing laws, mention the relevant Section of the Legal Metrology Act, 2009.`;
@@ -416,35 +418,52 @@ Use the official, standard script for ${targetLang} (e.g., Devanagari script for
 Do NOT respond in English unless the selected language is English or the user explicitly asks in English.
 =======================================================`;
 
-      // Build conversation contents with history
+      // Build conversation contents with history ensuring strict alternating roles
       const contents = [];
+      let isOngoing = false;
 
       if (Array.isArray(history) && history.length > 0) {
-        const recentHistory = history.slice(-6);
+        const recentHistory = history.slice(-8);
+        let lastRole = null;
+
         for (const item of recentHistory) {
-          if (!item.text) continue;
-          if (item.role === 'user') {
-            contents.push({
-              role: 'user',
-              parts: [{ text: item.text }]
-            });
-          } else if (item.role === 'bot' || item.role === 'model') {
-            contents.push({
-              role: 'model',
-              parts: [{ text: item.text }]
-            });
-          }
+          if (!item.text || !item.text.trim()) continue;
+          const role = item.role === 'user' ? 'user' : 'model';
+
+          // Skip initial greeting if it is model before any user turn
+          if (contents.length === 0 && role === 'model') continue;
+          // Avoid consecutive identical roles in Gemini multi-turn payload
+          if (role === lastRole) continue;
+
+          contents.push({
+            role,
+            parts: [{ text: item.text.trim() }]
+          });
+          lastRole = role;
+        }
+
+        // If the last turn in history was user, pop it to avoid consecutive user turns
+        if (lastRole === 'user' && contents.length > 0) {
+          contents.pop();
+        }
+
+        if (contents.length > 0) {
+          isOngoing = true;
         }
       }
 
-      // Append current user message with explicit language instruction
+      // Add conversational directive to prevent repeating introductions on ongoing turns
+      const continuityDirective = isOngoing
+        ? '\n\n[Context: Conversation is already ongoing. DO NOT repeat "Hello! I am Chat Wizard" or re-introduce yourself. Answer the user\'s question directly and concisely.]'
+        : '';
+
       const languageDirective = targetLang !== 'English'
         ? `\n\n[Instruction: Reply completely in ${targetLang} language using its native script.]`
         : '';
 
       contents.push({
         role: 'user',
-        parts: [{ text: `${userQuery}${languageDirective}` }]
+        parts: [{ text: `${userQuery}${continuityDirective}${languageDirective}` }]
       });
 
       // Try candidate models in order to handle temporary model load/503 spikes seamlessly

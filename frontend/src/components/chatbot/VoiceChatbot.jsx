@@ -26,6 +26,60 @@ function cleanTextForSpeech(raw) {
     .trim()
 }
 
+// Select the best natural female voice matching the language (like Gemini's female voice)
+function findBestFemaleVoice(voices, speechCode = 'en-IN') {
+  if (!voices || voices.length === 0) return null
+
+  const targetLang = (speechCode || 'en-IN').toLowerCase()
+  const langPrefix = targetLang.split('-')[0]
+
+  // Well-known natural female voice names across Windows, Chrome, Edge, Android, iOS, and macOS
+  const femaleVoiceNames = [
+    'heera', 'neerja', 'zira', 'jenny', 'aria', 'samantha', 'kore', 'aoede',
+    'veena', 'swara', 'kalpana', 'geeta', 'sunita', 'priya', 'ananya', 'shreya',
+    'female', 'woman', 'natural', 'google uk english female', 'google us english'
+  ]
+
+  // Explicit male names to strictly avoid
+  const maleKeywords = ['david', 'george', 'mark', 'ravi', 'hemant', 'male', 'guy', 'boy', 'microsoft ravi', 'microsoft david']
+
+  // 1. Language exact match with preferred female name
+  const exactLangVoices = voices.filter(v => {
+    const l = v.lang.toLowerCase().replace('_', '-')
+    return l === targetLang
+  })
+  for (const name of femaleVoiceNames) {
+    const match = exactLangVoices.find(v => v.name.toLowerCase().includes(name))
+    if (match) return match
+  }
+
+  // 2. Language prefix match (e.g. 'hi' for 'hi-IN') with female name
+  const prefixLangVoices = voices.filter(v => v.lang.toLowerCase().startsWith(langPrefix))
+  for (const name of femaleVoiceNames) {
+    const match = prefixLangVoices.find(v => v.name.toLowerCase().includes(name))
+    if (match) return match
+  }
+
+  // 3. Language voice that is not explicitly male
+  const nonMaleLangVoice = prefixLangVoices.find(v => {
+    const n = v.name.toLowerCase()
+    return !maleKeywords.some(m => n.includes(m))
+  })
+  if (nonMaleLangVoice) return nonMaleLangVoice
+
+  // 4. Any high quality natural female voice in English / Indian English (Heera, Neerja, Zira, Jenny, Samantha)
+  for (const name of femaleVoiceNames) {
+    const match = voices.find(v => v.name.toLowerCase().includes(name))
+    if (match) return match
+  }
+
+  // 5. Any voice containing 'female'
+  const anyFemale = voices.find(v => v.name.toLowerCase().includes('female'))
+  if (anyFemale) return anyFemale
+
+  return null
+}
+
 // Simple, safe inline markdown-style formatter for chat bubbles
 function FormattedMessage({ text, isBot }) {
   if (!text) return null
@@ -300,6 +354,7 @@ export default function VoiceChatbot() {
   const [error, setError] = useState('')
   const [copiedIdx, setCopiedIdx] = useState(null)
   const [activeSpeechIdx, setActiveSpeechIdx] = useState(null)
+  const [voices, setVoices] = useState([])
 
   const prevLangRef = useRef(language)
   const recognitionRef = useRef(null)
@@ -312,6 +367,23 @@ export default function VoiceChatbot() {
 
   const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)
   const supported = !!SpeechRecognition
+
+  // Preload and monitor available browser speech voices for female voice selection
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices()
+      if (v && v.length > 0) {
+        setVoices(v)
+      }
+    }
+
+    loadVoices()
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices
+    }
+  }, [])
 
   // Helper to completely stop speech recognition and clear timers
   const stopListening = useCallback(() => {
@@ -379,7 +451,7 @@ export default function VoiceChatbot() {
     }
   }, [open])
 
-  // Speak bot response using speech synthesis (ensuring microphone is OFF so it never listens to itself)
+  // Speak bot response using natural female speech synthesis (like Gemini)
   const speak = useCallback((text, messageIdx = null) => {
     // 1. Terminate speech recognition immediately to prevent feedback loop!
     stopListening()
@@ -391,9 +463,16 @@ export default function VoiceChatbot() {
     if (!clean) return
 
     const utter = new SpeechSynthesisUtterance(clean)
-    utter.lang = currentLangObj?.speechCode || 'en-IN'
-    utter.rate = 0.95
-    utter.pitch = 1
+    const targetCode = currentLangObj?.speechCode || 'en-IN'
+    utter.lang = targetCode
+    utter.rate = 1.0 // Natural, modern conversational pacing like Gemini
+    utter.pitch = 1.15 // Pleasant, warm female pitch like Gemini AI
+
+    // Automatically select the best natural female voice
+    const femaleVoice = findBestFemaleVoice(voices, targetCode)
+    if (femaleVoice) {
+      utter.voice = femaleVoice
+    }
 
     if (messageIdx !== null) {
       setActiveSpeechIdx(messageIdx)
@@ -407,7 +486,7 @@ export default function VoiceChatbot() {
     }
 
     synthRef.current.speak(utter)
-  }, [ttsEnabled, currentLangObj, stopListening])
+  }, [ttsEnabled, currentLangObj, stopListening, voices])
 
   async function sendMessage(textToSend) {
     const text = (textToSend || input).trim()
@@ -425,11 +504,11 @@ export default function VoiceChatbot() {
     setMessages(newMessages)
     setLoading(true)
 
-    // Prepare history payload for conversational AI
-    const historyPayload = newMessages
-      .filter(m => m.source !== 'system' || m.role === 'user')
+    // Prepare prior conversation history (excluding current message which is passed as text)
+    const historyPayload = messages
+      .filter(m => m.text)
       .slice(-8)
-      .map(m => ({ role: m.role, text: m.text }))
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text }))
 
     try {
       const res = await askBot(text, language, historyPayload)
