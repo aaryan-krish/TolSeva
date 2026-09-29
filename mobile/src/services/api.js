@@ -36,4 +36,8 @@ export const getAssignedVisits = (filter) => api.get('/inspector/assigned-visits
 export const submitVerification = (data) => api.post('/inspector/verify', data);
 export const getCertificate = (id) => api.get(`/inspector/certificate/${id}`);
 
+// Chat Wizard — calls the existing backend bot endpoint, no API key in mobile
+export const askBot = (query, lang = 'en', history = []) =>
+  api.post('/bot/assist', { query, lang, history });
+
 export default api;

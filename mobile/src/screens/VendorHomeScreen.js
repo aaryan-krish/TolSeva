@@ -133,9 +133,18 @@ export default function VendorHomeScreen() {
           </Text>
           <Text style={styles.gstinText}>GSTIN: {auth?.user?.gstin || '—'}</Text>
         </View>
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutBtnText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={{ gap: 6 }}>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutBtnText}>Logout</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.chatHeaderBtn}
+            onPress={() => navigation.navigate('Chat')}
+            accessibilityLabel="Open Chat Wizard"
+          >
+            <Text style={styles.chatHeaderBtnText}>🧙 AI Help</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Expiry Alert */}
@@ -468,6 +477,15 @@ export default function VendorHomeScreen() {
           </View>
         </View>
       </Modal>
+      {/* Floating Chat Wizard FAB */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('Chat')}
+        accessibilityLabel="Open Chat Wizard AI Support"
+      >
+        <Text style={styles.fabText}>🧙‍♂️</Text>
+        <Text style={styles.fabLabel}>Help</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -543,5 +561,37 @@ const styles = StyleSheet.create({
   cancelModalBtn: { flex: 1, paddingVertical: 11, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', alignItems: 'center' },
   cancelModalText: { color: '#666', fontWeight: 'bold' },
   submitModalBtn: { flex: 1, backgroundColor: SAFFRON, paddingVertical: 11, borderRadius: 8, alignItems: 'center' },
-  submitModalText: { color: '#fff', fontWeight: 'bold' }
+  submitModalText: { color: '#fff', fontWeight: 'bold' },
+
+  // Chat Wizard AI Help button (header)
+  chatHeaderBtn: {
+    backgroundColor: NAVY,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    alignItems: 'center',
+  },
+  chatHeaderBtnText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+
+  // Floating Action Button
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 18,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: NAVY,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  fabText: { fontSize: 22 },
+  fabLabel: { color: '#fff', fontSize: 8, fontWeight: 'bold', marginTop: -2 },
 });

@@ -1,9 +1,10 @@
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import VendorHomeScreen from '../screens/VendorHomeScreen';
+import ChatScreen from '../screens/ChatScreen';
 import VisitListScreen from '../screens/VisitListScreen';
 import VerifyScreen from '../screens/VerifyScreen';
 import CertificateScreen from '../screens/CertificateScreen';
@@ -42,6 +43,16 @@ export default function AppNavigator() {
               name="VendorHome"
               component={VendorHomeScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={{
+                title: 'Chat Wizard',
+                headerStyle: { backgroundColor: '#FF9933' },
+                headerTintColor: '#fff',
+                headerTitleStyle: { fontWeight: 'bold' },
+              }}
             />
             <Stack.Screen
               name="Certificate"
