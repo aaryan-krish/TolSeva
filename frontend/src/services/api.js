@@ -70,7 +70,14 @@ export const getPublicCertificate = (certificateId) => api.get(`/public/verify/$
 export const requestPublicOtp = (data) => api.post('/public/request-otp', data)
 export const verifyPublicOtp = (data) => api.post('/public/verify-otp', data)
 export const submitPublicComplaint = (data) => api.post('/public/complaints', data)
-export const trackPublicComplaint = (trackingId) => api.get(`/public/complaints/track/${encodeURIComponent(trackingId)}`)
+export const requestComplaintTrackingOtp = (data) => api.post('/public/complaints/track/request-otp', data)
+export const verifyComplaintTrackingOtp = (data) => api.post('/public/complaints/track/verify', data)
+export const trackPublicComplaint = (trackingId, otp) => {
+  if (otp) {
+    return api.post('/public/complaints/track/verify', { trackingId, otp })
+  }
+  return api.get(`/public/complaints/track/${encodeURIComponent(trackingId)}`)
+}
 
 // Bot
 export const askBot = (query, lang = 'en', history = []) => api.post('/bot/assist', { query, lang, history })

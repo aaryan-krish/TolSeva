@@ -40,4 +40,16 @@ export const getCertificate = (id) => api.get(`/inspector/certificate/${id}`);
 export const askBot = (query, lang = 'en', history = []) =>
   api.post('/bot/assist', { query, lang, history });
 
+// Auth — profile + password management
+export const getMe = () => api.get('/auth/me');
+export const changePassword = (data) => api.post('/auth/change-password', data);
+
+// Inspector — work history, enforcement reports
+export const getInspectorHistory = () => api.get('/inspector/history');
+export const getInspectorReports = () => api.get('/inspector/complaints');
+export const fileEnforcementReport = (data) => api.post('/inspector/complaints', data);
+
+// Vendor — complaints filed by this vendor
+export const getVendorComplaints = () => api.get('/vendor/complaints');
+
 export default api;

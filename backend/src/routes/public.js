@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { getDb } = require('../config/db');
 const { generateOtp, getOtpExpiry, sendOtp, isDemoMode, verifyOtpValue } = require('../utils/otp');
 
@@ -260,8 +261,10 @@ router.post('/complaints', async (req, res, next) => {
     const finalVendorId = vendorId || instrument?.vendor_id || log?.vendor_id || null;
     const finalInspectorId = log?.inspector_id || log?.inspectorId || null;
 
+    const secureId = `cmp-${crypto.randomBytes(16).toString('hex')}`;
+
     const newComplaint = {
-      id: `cmp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      id: secureId,
       type: 'PUBLIC_ABOUT_INSTRUMENT',
       vendorId: finalVendorId,
       inspectorId: finalInspectorId,
@@ -291,8 +294,173 @@ router.post('/complaints', async (req, res, next) => {
   }
 });
 
+// ── POST /api/public/complaints/track/request-otp ───────────────────────────
+// Request OTP verification code before tracking a complaint
+router.post('/complaints/track/request-otp', async (req, res, next) => {
+  try {
+    const { trackingId, phone } = req.body;
+    const rawId = decodeURIComponent(trackingId || '').trim();
+
+    if (!rawId) {
+      return res.status(400).json({ error: 'Please enter a valid Complaint Tracking ID' });
+    }
+
+    const db = getDb();
+    const complaint = await db.collection('complaints').findOne({
+      $or: [
+        { id: rawId },
+        { id: new RegExp(`^${rawId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      ]
+    });
+
+    if (!complaint) {
+      return res.status(404).json({
+        error: 'No complaint found matching this Tracking ID. Please verify the ID from your submission receipt.'
+      });
+    }
+
+    let targetPhone = normalizePhone(complaint.complainant_phone);
+    if (!targetPhone && phone) {
+      const cleanInput = normalizePhone(phone);
+      if (cleanInput.length === 10) {
+        targetPhone = cleanInput;
+        await db.collection('complaints').updateOne(
+          { _id: complaint._id },
+          { $set: { complainant_phone: targetPhone } }
+        );
+      }
+    }
+    if (!targetPhone && complaint.vendorId) {
+      const vendor = await db.collection('vendors').findOne({ id: complaint.vendorId });
+      if (vendor?.phone) targetPhone = normalizePhone(vendor.phone);
+    }
+
+    if (!targetPhone || targetPhone.length !== 10) {
+      return res.status(400).json({
+        error: 'No registered contact phone number found for this complaint record. Please contact the helpdesk at 1800-11-4000.'
+      });
+    }
+
+    if (phone) {
+      const inputPhone = normalizePhone(phone);
+      if (inputPhone && inputPhone !== targetPhone) {
+        return res.status(400).json({
+          error: 'Provided mobile number does not match the registered contact number for this complaint'
+        });
+      }
+    }
+
+    const demoActive = isDemoMode();
+    const otp = generateOtp(demoActive);
+    const otpExpiry = getOtpExpiry(10);
+
+    // Save tracking OTP on complaint record
+    await db.collection('complaints').updateOne(
+      { _id: complaint._id },
+      { $set: { tracking_otp: otp, tracking_otp_expires_at: otpExpiry } }
+    );
+
+    // Also update citizen_otps collection to reuse existing OTP flow
+    await db.collection('citizen_otps').updateOne(
+      { phone: targetPhone },
+      {
+        $set: {
+          phone: targetPhone,
+          otp: otp,
+          otp_expires_at: otpExpiry,
+          updated_at: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
+    await sendOtp(targetPhone, otp, demoActive);
+
+    const maskedPhone = targetPhone.length >= 4
+      ? '*'.repeat(targetPhone.length - 4) + targetPhone.slice(-4)
+      : targetPhone;
+
+    res.json({
+      success: true,
+      message: `Verification code sent to registered mobile ending in ${maskedPhone.slice(-4)}`,
+      phone_masked: maskedPhone,
+      tracking_id: complaint.id,
+      ...(demoActive ? { dev_otp: '123456', demo_mode: true } : {})
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/public/complaints/track/verify ─────────────────────────────────
+// Verify OTP and return sanitized public complaint status
+router.post('/complaints/track/verify', async (req, res, next) => {
+  try {
+    const { trackingId, otp } = req.body;
+    const rawId = decodeURIComponent(trackingId || '').trim();
+    const cleanOtp = String(otp || '').trim();
+
+    if (!rawId) {
+      return res.status(400).json({ error: 'Tracking ID is required' });
+    }
+    if (!cleanOtp) {
+      return res.status(400).json({ error: 'Verification OTP code is required' });
+    }
+
+    const db = getDb();
+    const complaint = await db.collection('complaints').findOne({
+      $or: [
+        { id: rawId },
+        { id: new RegExp(`^${rawId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      ]
+    });
+
+    if (!complaint) {
+      return res.status(404).json({
+        error: 'No complaint found matching this Tracking ID'
+      });
+    }
+
+    const targetPhone = normalizePhone(complaint.complainant_phone);
+    const citizenRecord = targetPhone
+      ? await db.collection('citizen_otps').findOne({ phone: targetPhone })
+      : null;
+
+    const demoActive = isDemoMode();
+    const isDemoMatch = demoActive && cleanOtp === '123456';
+    const isComplaintOtpMatch = complaint.tracking_otp && String(complaint.tracking_otp).trim() === cleanOtp;
+    const isCitizenOtpMatch = citizenRecord && String(citizenRecord.otp).trim() === cleanOtp;
+
+    if (!isDemoMatch && !isComplaintOtpMatch && !isCitizenOtpMatch) {
+      return res.status(401).json({ error: 'Invalid verification code. Please check your phone or request a new OTP.' });
+    }
+
+    if (!demoActive && complaint.tracking_otp_expires_at && new Date() > new Date(complaint.tracking_otp_expires_at)) {
+      return res.status(401).json({ error: 'Verification code has expired. Please request a new OTP.' });
+    }
+
+    // Clear tracking OTP after verification
+    await db.collection('complaints').updateOne(
+      { _id: complaint._id },
+      { $unset: { tracking_otp: '', tracking_otp_expires_at: '' } }
+    );
+
+    // Return sanitized public tracking status (minimum useful information)
+    res.json({
+      id: complaint.id,
+      status: complaint.status || 'OPEN',
+      category: complaint.category || 'General Grievance',
+      certificate_id: complaint.certificateId || null,
+      created_at: complaint.createdAt,
+      updated_at: complaint.updatedAt
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── GET /api/public/complaints/track/:trackingId ─────────────────────────────
-// Citizen tracks their filed complaint status using their tracking ID
+// Supports GET with query param ?otp=... or returns 401 requiring second-factor OTP
 router.get('/complaints/track/:trackingId', async (req, res, next) => {
   try {
     const rawId = decodeURIComponent(req.params.trackingId || '').trim();
@@ -314,68 +482,58 @@ router.get('/complaints/track/:trackingId', async (req, res, next) => {
       });
     }
 
-    // Enrich with vendor details
-    let vendor = null;
-    if (complaint.vendorId) {
-      vendor = await db.collection('vendors').findOne({ id: complaint.vendorId });
-    }
+    const targetPhone = normalizePhone(complaint.complainant_phone);
+    const maskedPhone = targetPhone && targetPhone.length >= 4
+      ? '*'.repeat(targetPhone.length - 4) + targetPhone.slice(-4)
+      : 'registered mobile';
 
-    // Enrich with instrument details
-    let instrument = null;
-    const targetInstId = complaint.instrumentId;
-    if (targetInstId) {
-      instrument = await db.collection('instruments').findOne({
-        $or: [{ id: targetInstId }, { serial_no: targetInstId }]
+    const providedOtp = String(req.query.otp || req.headers['x-tracking-otp'] || '').trim();
+
+    // If OTP is provided, verify it
+    if (providedOtp) {
+      const citizenRecord = targetPhone
+        ? await db.collection('citizen_otps').findOne({ phone: targetPhone })
+        : null;
+
+      const demoActive = isDemoMode();
+      const isDemoMatch = demoActive && providedOtp === '123456';
+      const isComplaintOtpMatch = complaint.tracking_otp && String(complaint.tracking_otp).trim() === providedOtp;
+      const isCitizenOtpMatch = citizenRecord && String(citizenRecord.otp).trim() === providedOtp;
+
+      if (!isDemoMatch && !isComplaintOtpMatch && !isCitizenOtpMatch) {
+        return res.status(401).json({
+          error: 'Invalid verification code. Please check your phone or request a new OTP.',
+          otp_required: true,
+          tracking_id: complaint.id,
+          phone_masked: maskedPhone
+        });
+      }
+
+      if (!demoActive && complaint.tracking_otp_expires_at && new Date() > new Date(complaint.tracking_otp_expires_at)) {
+        return res.status(401).json({
+          error: 'Verification code has expired. Please request a new OTP.',
+          otp_required: true,
+          tracking_id: complaint.id,
+          phone_masked: maskedPhone
+        });
+      }
+
+      return res.json({
+        id: complaint.id,
+        status: complaint.status || 'OPEN',
+        category: complaint.category || 'General Grievance',
+        certificate_id: complaint.certificateId || null,
+        created_at: complaint.createdAt,
+        updated_at: complaint.updatedAt
       });
     }
 
-    // Enrich with inspector details if assigned or recorded
-    let inspector = null;
-    if (complaint.inspectorId) {
-      inspector = await db.collection('inspectors').findOne({
-        $or: [{ id: complaint.inspectorId }, { gov_id: complaint.inspectorId }]
-      });
-    }
-
-    // Mask phone number for citizen privacy
-    const rawPhone = complaint.complainant_phone || '';
-    const maskedPhone = rawPhone.length >= 4
-      ? '*'.repeat(Math.max(0, rawPhone.length - 4)) + rawPhone.slice(-4)
-      : rawPhone;
-
-    res.json({
-      id: complaint.id,
-      type: complaint.type || 'PUBLIC_ABOUT_INSTRUMENT',
-      status: complaint.status || 'OPEN',
-      category: complaint.category,
-      description: complaint.description,
-      complainant_name: complaint.complainant_name,
-      complainant_phone_masked: maskedPhone,
-      certificate_id: complaint.certificateId || null,
-      created_at: complaint.createdAt,
-      updated_at: complaint.updatedAt,
-      admin_notes: complaint.adminNotes || null,
-      vendor: vendor ? {
-        id: vendor.id,
-        business_name: vendor.business_name,
-        city: vendor.city,
-        state: vendor.state,
-        gstin: vendor.gstin
-      } : null,
-      instrument: instrument ? {
-        id: instrument.id,
-        make: instrument.make,
-        model: instrument.model,
-        serial_no: instrument.serial_no,
-        instrument_type: instrument.instrument_type,
-        capacity: instrument.capacity,
-        unit: instrument.unit
-      } : null,
-      inspector: inspector ? {
-        full_name: inspector.full_name,
-        designation: inspector.designation,
-        zone: inspector.zone
-      } : null
+    // Second factor verification is required
+    return res.status(401).json({
+      error: 'Second factor verification required. Please enter the OTP sent to your registered mobile.',
+      otp_required: true,
+      tracking_id: complaint.id,
+      phone_masked: maskedPhone
     });
   } catch (err) {
     next(err);

@@ -32,8 +32,8 @@ export default function Navbar() {
       <nav className="bg-white border-b-2 border-[#162F6A] shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <Link to={auth ? dashboardLink : "/"} className="flex items-center gap-2">
-              <img src="/logo.png" alt="TolSeva Logo" className="h-10 object-contain" />
+            <Link to={auth ? dashboardLink : "/"} className="flex items-center gap-2 text-[#162F6A] font-bold text-lg">
+              TolSeva
             </Link>
 
             {/* Desktop Navigation */}

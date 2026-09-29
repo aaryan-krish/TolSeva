@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import VendorHomeScreen from '../screens/VendorHomeScreen';
 import ChatScreen from '../screens/ChatScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import InspectorHistoryScreen from '../screens/InspectorHistoryScreen';
 import VisitListScreen from '../screens/VisitListScreen';
 import VerifyScreen from '../screens/VerifyScreen';
 import CertificateScreen from '../screens/CertificateScreen';
@@ -55,6 +57,11 @@ export default function AppNavigator() {
               }}
             />
             <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
+              options={{ title: 'My Profile' }}
+            />
+            <Stack.Screen
               name="Certificate"
               component={CertificateScreen}
               options={{ title: 'Digital Certificate' }}
@@ -71,6 +78,16 @@ export default function AppNavigator() {
               name="Verify"
               component={VerifyScreen}
               options={{ title: 'Field Verification' }}
+            />
+            <Stack.Screen
+              name="InspectorHistory"
+              component={InspectorHistoryScreen}
+              options={{ title: 'Certificates & Reports' }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
+              options={{ title: 'My Profile' }}
             />
             <Stack.Screen
               name="Certificate"

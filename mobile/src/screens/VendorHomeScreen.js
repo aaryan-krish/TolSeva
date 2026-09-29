@@ -139,6 +139,13 @@ export default function VendorHomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.chatHeaderBtn}
+            onPress={() => navigation.navigate('Profile')}
+            accessibilityLabel="Open vendor profile"
+          >
+            <Text style={styles.chatHeaderBtnText}>👤 Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.chatHeaderBtn}
             onPress={() => navigation.navigate('Chat')}
             accessibilityLabel="Open Chat Wizard"
           >

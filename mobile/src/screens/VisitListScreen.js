@@ -25,9 +25,17 @@ export default function VisitListScreen() {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={handleLogout} style={{ marginRight: 12 }}>
-          <Text style={{ color: '#C8960C', fontWeight: 'bold' }}>Logout</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginRight: 8 }}>
+          <TouchableOpacity onPress={() => navigation.navigate('InspectorHistory')}>
+            <Text style={{ color: '#003087', fontWeight: 'bold', fontSize: 12 }}>History</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <Text style={{ color: '#003087', fontWeight: 'bold', fontSize: 12 }}>Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout}>
+            <Text style={{ color: '#C8960C', fontWeight: 'bold', fontSize: 12 }}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       )
     });
   }, []);

@@ -6,62 +6,94 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Building2,
-  Scale,
   FileText,
-  User,
-  Phone,
   Calendar,
-  ArrowRight,
   ExternalLink,
-  ChevronRight,
-  HelpCircle,
-  RefreshCw
+  RefreshCw,
+  KeyRound,
+  ArrowLeft
 } from 'lucide-react'
-import { trackPublicComplaint } from '../services/api.js'
+import { requestComplaintTrackingOtp, verifyComplaintTrackingOtp } from '../services/api.js'
 
 export default function TrackComplaintPage() {
   const { trackingId: paramId } = useParams()
   const navigate = useNavigate()
 
   const [searchId, setSearchId] = useState(paramId || '')
+  const [step, setStep] = useState('INPUT_ID') // 'INPUT_ID' | 'ENTER_OTP' | 'VIEW_STATUS'
+  const [otp, setOtp] = useState('')
+  const [phoneMasked, setPhoneMasked] = useState('')
+  const [devOtp, setDevOtp] = useState('')
   const [complaint, setComplaint] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [searched, setSearched] = useState(false)
 
   useEffect(() => {
     if (paramId) {
       setSearchId(paramId)
-      fetchStatus(paramId)
+      handleRequestOtp(paramId)
     }
   }, [paramId])
 
-  async function fetchStatus(idToFetch) {
-    const cleanId = String(idToFetch || '').trim()
+  async function handleRequestOtp(idToRequest) {
+    const cleanId = String(idToRequest || searchId || '').trim()
     if (!cleanId) return
 
     setLoading(true)
     setError(null)
-    setSearched(true)
     try {
-      const res = await trackPublicComplaint(cleanId)
-      setComplaint(res.data)
+      const res = await requestComplaintTrackingOtp({ trackingId: cleanId })
+      setPhoneMasked(res.data.phone_masked || '')
+      if (res.data.dev_otp) {
+        setDevOtp(res.data.dev_otp)
+      }
+      setStep('ENTER_OTP')
     } catch (err) {
       setComplaint(null)
       setError(
         err.response?.data?.error ||
         'No complaint found with this Tracking ID. Please verify the ID and try again.'
       )
+      setStep('INPUT_ID')
     } finally {
       setLoading(false)
     }
   }
 
-  function handleSearchSubmit(e) {
+  async function handleVerifyOtp(e) {
     e.preventDefault()
-    if (!searchId.trim()) return
-    navigate(`/track-complaint/${encodeURIComponent(searchId.trim())}`)
+    const cleanId = String(searchId || '').trim()
+    const cleanOtp = String(otp || '').trim()
+    if (!cleanId || !cleanOtp) {
+      setError('Please enter the 6-digit verification code')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await verifyComplaintTrackingOtp({ trackingId: cleanId, otp: cleanOtp })
+      setComplaint(res.data)
+      setStep('VIEW_STATUS')
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+        'Invalid or expired verification code. Please try again.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleStartOver() {
+    setSearchId('')
+    setOtp('')
+    setPhoneMasked('')
+    setDevOtp('')
+    setComplaint(null)
+    setError(null)
+    setStep('INPUT_ID')
+    navigate('/track-complaint')
   }
 
   // Determine active step index (0: OPEN, 1: INVESTIGATING, 2: RESOLVED)
@@ -91,43 +123,45 @@ export default function TrackComplaintPage() {
             Track Citizen Complaint Status
           </h1>
           <p className="text-[#D2DFFF] text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
-            Monitor real-time investigation progress, field audit results, and official actions taken by the Legal Metrology Department against reported measurement inaccuracies.
+            Verify your registered contact to monitor real-time investigation progress, field audit results, and official actions taken by the Legal Metrology Department.
           </p>
 
-          {/* Search Box */}
-          <form onSubmit={handleSearchSubmit} className="mt-8 max-w-2xl">
-            <div className="bg-white p-2 rounded-2xl shadow-xl flex flex-col sm:flex-row gap-2 border border-slate-200">
-              <div className="relative flex-1 flex items-center">
-                <Search size={20} className="text-slate-400 absolute left-3.5 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchId}
-                  onChange={e => setSearchId(e.target.value)}
-                  placeholder="Enter Tracking ID (e.g. cmp-174...)"
-                  className="w-full pl-11 pr-4 py-3 text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none rounded-xl"
-                  required
-                />
+          {/* Search Box - Visible in INPUT_ID step */}
+          {step === 'INPUT_ID' && (
+            <form onSubmit={e => { e.preventDefault(); handleRequestOtp(searchId) }} className="mt-8 max-w-2xl">
+              <div className="bg-white p-2 rounded-2xl shadow-xl flex flex-col sm:flex-row gap-2 border border-slate-200">
+                <div className="relative flex-1 flex items-center">
+                  <Search size={20} className="text-slate-400 absolute left-3.5 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchId}
+                    onChange={e => setSearchId(e.target.value)}
+                    placeholder="Enter Tracking ID (e.g. cmp-...)"
+                    className="w-full pl-11 pr-4 py-3 text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none rounded-xl"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary py-3 px-7 text-sm font-semibold flex items-center justify-center gap-2 shrink-0 rounded-xl"
+                >
+                  {loading ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" /> Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <Search size={16} /> Track Status
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary py-3 px-7 text-sm font-semibold flex items-center justify-center gap-2 shrink-0 rounded-xl"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw size={16} className="animate-spin" /> Tracking...
-                  </>
-                ) : (
-                  <>
-                    <Search size={16} /> Track Status
-                  </>
-                )}
-              </button>
-            </div>
-            <p className="text-2xs text-slate-400 mt-2 pl-2">
-              💡 Tip: The Tracking ID was displayed on your confirmation screen when you reported the machine via QR code.
-            </p>
-          </form>
+              <p className="text-2xs text-slate-400 mt-2 pl-2">
+                💡 Tip: A verification code will be sent to the complainant's registered mobile number for privacy and security.
+              </p>
+            </form>
+          )}
         </div>
 
         {/* Decorative lighting */}
@@ -136,48 +170,110 @@ export default function TrackComplaintPage() {
 
       {/* Main Content Area */}
       <div className="max-w-4xl mx-auto px-4 mt-8">
-        {/* Loading State */}
+        {/* Error Notification */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-2">
+              <AlertCircle size={22} />
+            </div>
+            <h3 className="text-base font-bold text-red-950">Verification Notice</h3>
+            <p className="text-sm text-red-800 max-w-md mx-auto mt-1 leading-relaxed">
+              {error}
+            </p>
+            {step !== 'INPUT_ID' && (
+              <button
+                type="button"
+                onClick={handleStartOver}
+                className="mt-4 btn-outline text-xs py-1.5 px-4 bg-white"
+              >
+                Try Another Tracking ID
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Loading Indicator */}
         {loading && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm mb-6">
             <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <h3 className="font-bold text-slate-800 text-base">Retrieving Complaint Records</h3>
+            <h3 className="font-bold text-slate-800 text-base">Processing Request</h3>
             <p className="text-xs text-slate-500 mt-1">Connecting to Legal Metrology Registry Database...</p>
           </div>
         )}
 
-        {/* Error State */}
-        {!loading && error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
-              <AlertCircle size={28} />
+        {/* STEP 2: Enter Verification OTP */}
+        {step === 'ENTER_OTP' && !loading && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-lg mx-auto">
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 border border-amber-200">
+                <KeyRound size={28} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">Security Verification Required</h2>
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                To protect citizen privacy, a 6-digit verification code has been dispatched to the complainant's registered mobile ending in <strong className="text-slate-900">{phoneMasked || 'registered number'}</strong>.
+              </p>
+              <div className="mt-2 inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 px-3 py-1 rounded-md text-xs font-mono">
+                Tracking ID: <span className="font-bold">{searchId}</span>
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-red-950">Record Not Found</h3>
-            <p className="text-sm text-red-800 max-w-md mx-auto mt-1 leading-relaxed">
-              {error}
-            </p>
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <Link to="/" className="btn-outline text-xs py-2 px-4 bg-white">
-                Back to Home
-              </Link>
-            </div>
+
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Enter 6-Digit Verification Code *
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                  placeholder="• • • • • •"
+                  className="input-field text-center text-xl tracking-[0.5em] font-bold py-3"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {devOtp && (
+                <button
+                  type="button"
+                  onClick={() => setOtp(devOtp)}
+                  className="w-full text-xs text-emerald-700 hover:text-emerald-800 font-medium py-1.5 px-2 bg-emerald-50 rounded-lg border border-emerald-200 transition-colors"
+                >
+                  Demo Mode: Click to fill code ({devOtp})
+                </button>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || otp.length < 6}
+                className="btn-primary w-full py-3 text-sm font-semibold rounded-xl flex items-center justify-center gap-2"
+              >
+                <ShieldCheck size={16} /> Verify &amp; View Status
+              </button>
+
+              <div className="flex items-center justify-between pt-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleRequestOtp(searchId)}
+                  className="text-emerald-700 hover:underline font-semibold"
+                >
+                  Resend Code
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartOver}
+                  className="text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                >
+                  <ArrowLeft size={13} /> Change Tracking ID
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
-        {/* Initial Empty State (if no param given yet) */}
-        {!loading && !error && !complaint && !searched && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 border border-emerald-100">
-              <Scale size={28} />
-            </div>
-            <h3 className="text-base font-bold text-slate-800">Enter Your Tracking ID Above</h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 leading-relaxed">
-              Please enter the Tracking ID assigned when filing your report to inspect the current state of departmental investigation, inspector assignment, and punitive or corrective actions.
-            </p>
-          </div>
-        )}
-
-        {/* Success Complaint Details */}
-        {!loading && complaint && (
+        {/* STEP 3: Display Sanitized Status */}
+        {step === 'VIEW_STATUS' && !loading && complaint && (
           <div className="space-y-6">
             {/* Status Header Card */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden">
@@ -192,10 +288,18 @@ export default function TrackComplaintPage() {
                   <h2 className="text-xl font-extrabold text-slate-900 mt-2">
                     {complaint.category || 'Measurement Discrepancy'}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
-                    <Calendar size={13} />
-                    Reported on {complaint.created_at ? new Date(complaint.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Official Record'}
-                  </p>
+                  <div className="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-4">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar size={13} />
+                      Reported: {complaint.created_at ? new Date(complaint.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Official Record'}
+                    </span>
+                    {complaint.updated_at && complaint.updated_at !== complaint.created_at && (
+                      <span className="flex items-center gap-1.5 text-slate-400">
+                        <Clock size={13} />
+                        Last Updated: {new Date(complaint.updated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Status Badge */}
@@ -257,7 +361,7 @@ export default function TrackComplaintPage() {
                     </div>
                     <p className="text-2xs text-slate-600 leading-normal">
                       {stepIndex >= 1
-                        ? 'Assigned to Inspector. Field calibration test and evidence audit in progress.'
+                        ? 'Assigned to Inspector. Field calibration test and verification in progress.'
                         : 'Pending administrative assignment to regional inspection officer.'}
                     </p>
                   </div>
@@ -278,160 +382,62 @@ export default function TrackComplaintPage() {
                     </div>
                     <p className="text-2xs text-slate-600 leading-normal">
                       {stepIndex >= 2
-                        ? 'Inspection concluded. Official remarks & enforcement action recorded.'
+                        ? 'Inspection concluded. Enforcement action and official findings recorded.'
                         : 'Awaiting completion of inspection & administrative resolution.'}
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Certificate Link if available */}
+              {complaint.certificate_id && (
+                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Related Certificate Reference:</span>
+                  <Link
+                    to={`/verify/${encodeURIComponent(complaint.certificate_id)}`}
+                    className="text-emerald-700 hover:text-emerald-800 font-mono font-bold hover:underline flex items-center gap-1"
+                    target="_blank"
+                  >
+                    {complaint.certificate_id} <ExternalLink size={12} />
+                  </Link>
+                </div>
+              )}
             </div>
 
-            {/* Department Action Notes / Official Findings */}
-            {complaint.admin_notes && (
-              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <ShieldCheck size={22} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-emerald-950 text-sm">
-                        Official Department Action &amp; Resolution Remarks
-                      </h3>
-                      <span className="text-2xs font-semibold uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2 py-0.5 rounded-full">
-                        Admin Recorded
-                      </span>
-                    </div>
-                    <p className="text-xs text-emerald-900 mt-2 leading-relaxed bg-white/80 p-3.5 rounded-xl border border-emerald-200 whitespace-pre-wrap font-medium">
-                      {complaint.admin_notes}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Grievance Description & Complainant Details */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
-                <FileText size={16} className="text-orange-600" />
-                Citizen Complaint Report Summary
-              </h3>
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed">
-                <p className="font-semibold text-slate-800 mb-1">Reported Issue Description:</p>
-                <p className="whitespace-pre-wrap italic text-slate-600">
-                  "{complaint.description}"
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100 text-xs">
-                <div className="flex items-center gap-2">
-                  <User size={15} className="text-slate-400 shrink-0" />
-                  <span className="text-slate-500">Complainant Name:</span>
-                  <span className="font-semibold text-slate-800">{complaint.complainant_name || 'Citizen'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={15} className="text-slate-400 shrink-0" />
-                  <span className="text-slate-500">Contact Number:</span>
-                  <span className="font-semibold text-slate-800 font-mono">
-                    +91 {complaint.complainant_phone_masked || '******'}
-                  </span>
-                  <span className="text-2xs font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
-                    Verified
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Target Establishment & Machine Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Establishment / Vendor Card */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
-                  <Building2 size={16} className="text-emerald-700" />
-                  Reported Establishment Details
-                </h3>
-                {complaint.vendor ? (
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Business / Shop:</span>
-                      <span className="font-bold text-slate-800 text-right">{complaint.vendor.business_name}</span>
-                    </div>
-                    {complaint.vendor.gstin && (
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">GSTIN:</span>
-                        <span className="font-mono font-medium text-slate-800">{complaint.vendor.gstin}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between py-1 border-b border-slate-100">
-                      <span className="text-slate-500">Location:</span>
-                      <span className="font-medium text-slate-800">
-                        {[complaint.vendor.city, complaint.vendor.state].filter(Boolean).join(', ') || 'Registered Location'}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-500 italic">Vendor information recorded under department registry.</p>
-                )}
-              </div>
-
-              {/* Machine / Instrument Card */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
-                  <Scale size={16} className="text-amber-600" />
-                  Instrument / Stamping Information
-                </h3>
-                <div className="space-y-2.5 text-xs">
-                  {complaint.instrument ? (
-                    <>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Instrument Model:</span>
-                        <span className="font-bold text-slate-800 text-right">
-                          {complaint.instrument.make} {complaint.instrument.model}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Serial Number:</span>
-                        <span className="font-mono font-bold text-slate-800">
-                          {complaint.instrument.serial_no}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-slate-100">
-                        <span className="text-slate-500">Capacity / Type:</span>
-                        <span className="font-medium text-slate-800">
-                          {complaint.instrument.capacity} {complaint.instrument.unit} ({complaint.instrument.instrument_type || 'Standard'})
-                        </span>
-                      </div>
-                    </>
-                  ) : null}
-
-                  {complaint.certificate_id && (
-                    <div className="pt-2 flex items-center justify-between">
-                      <span className="text-slate-500">Certificate No:</span>
-                      <Link
-                        to={`/verify/${encodeURIComponent(complaint.certificate_id)}`}
-                        className="text-emerald-700 hover:text-emerald-800 font-mono font-bold hover:underline flex items-center gap-1"
-                        target="_blank"
-                      >
-                        {complaint.certificate_id} <ExternalLink size={12} />
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Helpline / Grievance Info Box */}
+            {/* Actions & Helpline Box */}
             <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
-                <h4 className="font-bold text-sm text-amber-400">Need Immediate Assistance or Additional Evidences?</h4>
+                <h4 className="font-bold text-sm text-amber-400">Need Immediate Assistance or Follow-up?</h4>
                 <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                  You can provide photos, receipts, or escalate pending grievances to the Legal Metrology Consumer Toll-Free Desk at <strong className="text-white">1800-11-4000</strong> quoting your Tracking ID <span className="font-mono text-amber-300 font-bold">{complaint.id}</span>.
+                  You can quote your Tracking ID <span className="font-mono text-amber-300 font-bold">{complaint.id}</span> to the Legal Metrology Consumer Toll-Free Desk at <strong className="text-white">1800-11-4000</strong> (Mon–Fri, 10 AM – 5 PM).
                 </p>
               </div>
-              <Link to="/" className="btn-outline border-white text-white hover:bg-white hover:text-slate-900 text-xs py-2 px-4 whitespace-nowrap shrink-0">
-                Back to Home
-              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleStartOver}
+                  className="btn-outline border-white text-white hover:bg-white hover:text-slate-900 text-xs py-2 px-4 whitespace-nowrap"
+                >
+                  Track Another Complaint
+                </button>
+                <Link to="/" className="btn-primary text-xs py-2 px-4 whitespace-nowrap">
+                  Home
+                </Link>
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* Initial Empty Guide */}
+        {step === 'INPUT_ID' && !loading && !error && (
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3 border border-emerald-100">
+              <FileText size={28} />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">Enter Your Tracking ID Above</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 leading-relaxed">
+              Enter the Complaint Reference ID provided when submitting your grievance. For security and citizen data privacy, an OTP verification code will be sent to the complainant's phone before displaying investigation status.
+            </p>
           </div>
         )}
       </div>
