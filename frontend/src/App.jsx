@@ -8,6 +8,7 @@ import VendorDashboard from './pages/VendorDashboard.jsx'
 import InspectorDashboard from './pages/InspectorDashboard.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import PublicVerifyPage from './pages/PublicVerifyPage.jsx'
+import TrackComplaintPage from './pages/TrackComplaintPage.jsx'
 import VoiceChatbot from './components/chatbot/VoiceChatbot.jsx'
 
 function App() {
@@ -25,6 +26,8 @@ function App() {
               <Route path="/inspector" element={<InspectorDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/verify/:certificateId" element={<PublicVerifyPage />} />
+              <Route path="/track-complaint" element={<TrackComplaintPage />} />
+              <Route path="/track-complaint/:trackingId" element={<TrackComplaintPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
@@ -43,6 +46,7 @@ function App() {
                   <ul className="space-y-2 text-slate-300">
                     <li><a href="#about" className="hover:text-white hover:underline transition-colors">About Legal Metrology</a></li>
                     <li><a href="#services" className="hover:text-white hover:underline transition-colors">Our Services</a></li>
+                    <li><a href="/track-complaint" className="hover:text-white hover:underline transition-colors">Track Complaint Status</a></li>
                     <li><a href="#contact" className="hover:text-white hover:underline transition-colors">Contact Us &amp; Helplines</a></li>
                   </ul>
                 </div>

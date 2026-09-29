@@ -295,4 +295,95 @@ router.post('/complaints', async (req, res, next) => {
   }
 });
 
+// ── GET /api/public/complaints/track/:trackingId ─────────────────────────────
+// Citizen tracks their filed complaint status using their tracking ID
+router.get('/complaints/track/:trackingId', async (req, res, next) => {
+  try {
+    const rawId = decodeURIComponent(req.params.trackingId || '').trim();
+    if (!rawId) {
+      return res.status(400).json({ error: 'Please enter a valid Complaint Tracking ID' });
+    }
+
+    const db = getDb();
+    const complaint = await db.collection('complaints').findOne({
+      $or: [
+        { id: rawId },
+        { id: new RegExp(`^${rawId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+      ]
+    });
+
+    if (!complaint) {
+      return res.status(404).json({
+        error: 'No complaint found matching this Tracking ID. Please verify the ID from your submission receipt.'
+      });
+    }
+
+    // Enrich with vendor details
+    let vendor = null;
+    if (complaint.vendorId) {
+      vendor = await db.collection('vendors').findOne({ id: complaint.vendorId });
+    }
+
+    // Enrich with instrument details
+    let instrument = null;
+    const targetInstId = complaint.instrumentId;
+    if (targetInstId) {
+      instrument = await db.collection('instruments').findOne({
+        $or: [{ id: targetInstId }, { serial_no: targetInstId }]
+      });
+    }
+
+    // Enrich with inspector details if assigned or recorded
+    let inspector = null;
+    if (complaint.inspectorId) {
+      inspector = await db.collection('inspectors').findOne({
+        $or: [{ id: complaint.inspectorId }, { gov_id: complaint.inspectorId }]
+      });
+    }
+
+    // Mask phone number for citizen privacy
+    const rawPhone = complaint.complainant_phone || '';
+    const maskedPhone = rawPhone.length >= 4
+      ? '*'.repeat(Math.max(0, rawPhone.length - 4)) + rawPhone.slice(-4)
+      : rawPhone;
+
+    res.json({
+      id: complaint.id,
+      type: complaint.type || 'PUBLIC_ABOUT_INSTRUMENT',
+      status: complaint.status || 'OPEN',
+      category: complaint.category,
+      description: complaint.description,
+      complainant_name: complaint.complainant_name,
+      complainant_phone_masked: maskedPhone,
+      certificate_id: complaint.certificateId || null,
+      created_at: complaint.createdAt,
+      updated_at: complaint.updatedAt,
+      admin_notes: complaint.adminNotes || null,
+      vendor: vendor ? {
+        id: vendor.id,
+        business_name: vendor.business_name,
+        city: vendor.city,
+        state: vendor.state,
+        gstin: vendor.gstin
+      } : null,
+      instrument: instrument ? {
+        id: instrument.id,
+        make: instrument.make,
+        model: instrument.model,
+        serial_no: instrument.serial_no,
+        instrument_type: instrument.instrument_type,
+        capacity: instrument.capacity,
+        unit: instrument.unit
+      } : null,
+      inspector: inspector ? {
+        full_name: inspector.full_name,
+        designation: inspector.designation,
+        zone: inspector.zone
+      } : null
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

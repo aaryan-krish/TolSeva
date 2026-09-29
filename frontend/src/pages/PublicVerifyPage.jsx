@@ -16,7 +16,8 @@ import {
   FileText,
   KeyRound,
   Send,
-  HelpCircle
+  HelpCircle,
+  Search
 } from 'lucide-react'
 import { getPublicCertificate, requestPublicOtp, verifyPublicOtp, submitPublicComplaint } from '../services/api.js'
 
@@ -387,7 +388,7 @@ export default function PublicVerifyPage() {
               {showComplaintForm && (
                 <div className="p-6">
                   {complaintSuccess ? (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center space-y-3">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center space-y-4">
                       <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                         <CheckCircle2 size={28} />
                       </div>
@@ -395,8 +396,22 @@ export default function PublicVerifyPage() {
                       <p className="text-sm text-emerald-800 max-w-md mx-auto">
                         Your report has been forwarded directly to the Legal Metrology Administration Control Panel. An inspector will be assigned for surprise audit and calibration testing.
                       </p>
-                      <div className="inline-block bg-white border border-emerald-200 px-4 py-2 rounded-lg font-mono text-xs font-bold text-emerald-900">
-                        Tracking ID: {complaintSuccess.complaint_id}
+                      <div className="inline-block bg-white border border-emerald-300 px-4 py-2 rounded-xl font-mono text-xs font-bold text-emerald-900 shadow-xs">
+                        Tracking ID: <span className="text-emerald-700 font-extrabold">{complaintSuccess.complaint_id}</span>
+                      </div>
+                      <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <Link
+                          to={`/track-complaint/${encodeURIComponent(complaintSuccess.complaint_id)}`}
+                          className="btn-primary text-xs py-2.5 px-5 flex items-center gap-2 shadow-sm"
+                        >
+                          <Search size={14} /> Track This Complaint Live
+                        </Link>
+                        <Link
+                          to="/"
+                          className="btn-outline text-xs py-2.5 px-4 bg-white"
+                        >
+                          Back to Home
+                        </Link>
                       </div>
                     </div>
                   ) : (

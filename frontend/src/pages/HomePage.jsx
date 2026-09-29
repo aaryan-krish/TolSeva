@@ -1,14 +1,16 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useLanguage } from '../context/LanguageContext.jsx'
 import StatCounter from '../components/home/StatCounter.jsx'
 import InfoCards from '../components/home/InfoCards.jsx'
-import { ArrowRight, Mic, ShieldCheck, FileCheck } from 'lucide-react'
+import { ArrowRight, Mic, ShieldCheck, FileCheck, Search } from 'lucide-react'
 
 export default function HomePage() {
   const { auth } = useAuth()
   const { t } = useLanguage()
   const navigate = useNavigate()
+  const [homeTrackingId, setHomeTrackingId] = useState('')
 
   const dashboardLink = auth?.role === 'vendor' ? '/vendor'
     : auth?.role === 'inspector' ? '/inspector'
@@ -43,6 +45,12 @@ export default function HomePage() {
                   {t('goToDashboard')} <ArrowRight size={18} />
                 </button>
               ) : null}
+              <button
+                onClick={() => navigate('/track-complaint')}
+                className="bg-white text-orange-800 hover:bg-orange-50 border border-orange-200 flex items-center gap-2 text-base px-6 py-3 font-bold rounded-xl shadow-md transition-all hover:shadow-lg"
+              >
+                <Search size={18} className="text-orange-600" /> Track Complaint Status
+              </button>
               <a href="#about" className="btn-outline border-white text-white hover:bg-white hover:text-orange-700 flex items-center gap-2 text-base px-6 py-3 font-semibold transition-colors">
                 {t('learnMore')} <ArrowRight size={18} />
               </a>
@@ -55,6 +63,74 @@ export default function HomePage() {
       </section>
 
       <StatCounter />
+
+      {/* Citizen Grievance & Tracking Quick Section */}
+      <section className="py-12 bg-gradient-to-b from-orange-50/50 to-white border-y border-orange-100">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-white rounded-3xl border-2 border-orange-200 shadow-xl p-6 sm:p-10 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1.5 tricolor-strip" />
+            <div className="grid lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-7">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+                  <ShieldCheck size={14} className="text-orange-600" /> Citizen Protection &amp; Grievance Cell
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+                  Track Your Complaint Status
+                </h2>
+                <p className="text-slate-600 text-sm sm:text-base mt-2 leading-relaxed">
+                  Have you filed a complaint regarding an inaccurate weighing scale, faulty meter, or tampering? Enter your Complaint Tracking ID below to see live inspection status, assigned inspector, and departmental resolution.
+                </p>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (homeTrackingId.trim()) {
+                      navigate(`/track-complaint/${encodeURIComponent(homeTrackingId.trim())}`)
+                    }
+                  }}
+                  className="mt-6 flex flex-col sm:flex-row gap-3"
+                >
+                  <div className="relative flex-1">
+                    <Search size={18} className="text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={homeTrackingId}
+                      onChange={(e) => setHomeTrackingId(e.target.value)}
+                      placeholder="Enter Tracking ID (e.g. cmp-174...)"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn-primary py-3 px-6 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl whitespace-nowrap shadow-md"
+                  >
+                    <Search size={16} /> Track Status <ArrowRight size={16} />
+                  </button>
+                </form>
+              </div>
+
+              <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 to-emerald-950 text-white p-6 sm:p-8 rounded-2xl shadow-inner border border-emerald-800/40">
+                <h3 className="font-bold text-amber-400 text-base flex items-center gap-2">
+                  <FileCheck size={20} /> Citizen Redressal SLA
+                </h3>
+                <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                  Under the Legal Metrology Act, every complaint lodged with authentic mobile OTP verification is audited by a designated district officer within 48 hours.
+                </p>
+                <div className="mt-5 space-y-3 pt-4 border-t border-white/10 text-xs">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span>Average Grievance Action:</span>
+                    <strong className="text-white">Within 48–72 Hours</strong>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span>National Consumer Toll-Free:</span>
+                    <strong className="text-amber-300 font-mono">1800-11-4000</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Services Section */}
       <section id="services" className="py-16 bg-white">

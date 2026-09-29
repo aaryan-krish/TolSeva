@@ -38,6 +38,9 @@ export default function Navbar() {
                   <Link to="/" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navHome')}</Link>
                   <a href="#about" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navAbout')}</a>
                   <a href="#services" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navServices')}</a>
+                  <Link to="/track-complaint" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors flex items-center gap-1">
+                    Track Complaint
+                  </Link>
                   <a href="#contact" className="text-gray-700 hover:text-orange-600 font-medium text-sm transition-colors">{t('navContact')}</a>
                 </>
               )}
@@ -69,6 +72,7 @@ export default function Navbar() {
                 <Link to="/" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navHome')}</Link>
                 <a href="#about" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navAbout')}</a>
                 <a href="#services" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navServices')}</a>
+                <Link to="/track-complaint" className="block py-2 text-orange-600 font-medium" onClick={() => setMenuOpen(false)}>Track Complaint</Link>
                 <a href="#contact" className="block py-2 text-gray-700 font-medium" onClick={() => setMenuOpen(false)}>{t('navContact')}</a>
               </>
             )}
