@@ -8,3 +8,4 @@ dist/
 build/
 .expo/
 **/.expo/
+/backend/seed/seed.js
